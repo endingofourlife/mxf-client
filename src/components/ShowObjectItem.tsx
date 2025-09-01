@@ -1,3 +1,6 @@
+import styles from './ShowObjectItem.module.css';
+import type {MouseEvent} from "react";
+
 interface ShowObjectItemProps {
     id: number;
     name: string;
@@ -18,24 +21,28 @@ function ShowObjectItem({id, name, created, onClick, onDelete}: ShowObjectItemPr
     function handleClick(){
         onClick(id);
     }
-    function handleDelete(){
+
+    function handleDelete(e: MouseEvent){
+        e.stopPropagation();
         onDelete(id);
     }
 
     return (
-        <li>
-            <dl onClick={handleClick}>
-                <dt>Назва</dt>
-                <dd style={{cursor: 'pointer', color: 'blue', textDecoration: 'underline'}}>
+        <section className={styles.objectCard} onClick={handleClick}>
+            <dl className={styles.dl}>
+                <dt className={styles.dt}>Назва</dt>
+                <dd className={`${styles.dd} ${styles.name}`}>
                     {name}
                 </dd>
-                <dt>Створено</dt>
-                <dd>{formattedDate}</dd>
+                <dt className={styles.dt}>Створено</dt>
+                <dd className={`${styles.dd} ${styles.date}`}>
+                    {formattedDate}
+                </dd>
             </dl>
-            <button onClick={handleDelete}>
-                Видалити об'єкт
+            <button className={styles.deleteButton} onClick={handleDelete}>
+                Видалити
             </button>
-        </li>
+        </section>
     );
 }
 

@@ -4,11 +4,12 @@ import OnboardingPage from "./pages/OnboardingPage.tsx";
 import ConfigurePage from "./pages/ConfigurePage.tsx";
 import EnginePage from "./pages/EnginePage.tsx";
 import {ActiveRealEstateObjectProvider} from "./contexts/ActiveRealEstateObjectContext.tsx";
-
+import styles from './App.module.css';
 
 function App() {
 
   return (
+      <div className={styles.globalContainer}>
         <BrowserRouter>
             <ActiveRealEstateObjectProvider>
                 <Routes>
@@ -19,6 +20,7 @@ function App() {
                 </Routes>
             </ActiveRealEstateObjectProvider>
         </BrowserRouter>
+      </div>
   )
 }
 

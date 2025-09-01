@@ -1,4 +1,5 @@
 import {type FormEvent, useState} from "react";
+import styles from './CreateEmptyObject.module.css';
 
 interface CreateEmptyObjectProps {
     onCreate: (name: string) => void;
@@ -13,17 +14,19 @@ function CreateEmptyObject({onCreate}: CreateEmptyObjectProps) {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <p>
-                <label htmlFor="name">Введіть ім'я</label>
-                <input type="text"
-                       id="name"
-                       name="name"
-                       placeholder="Новий об'єкт"
-                       onChange={(e) => setName(e.target.value)}
+        <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.formGroup}>
+                <label htmlFor="name" className={styles.label}>Введіть ім'я</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Новий об'єкт"
+                    onChange={(e) => setName(e.target.value)}
+                    className={styles.input}
                 />
-            </p>
-            <button type="submit">Створити</button>
+            </div>
+            <button type="submit" className={styles.button}>Створити</button>
         </form>
     );
 }

@@ -4,6 +4,7 @@ import type {RealEstateObject} from "../interfaces/RealEstateObject.ts";
 import {createRealEstateObject, deleteRealEstateObject, fetchRealEstateObjects} from "../api/RealEstateObjectApi.ts";
 import ShowObjectItem from "../components/ShowObjectItem.tsx";
 import CreateEmptyObject from "../components/CreateEmptyObject.tsx";
+import styles from './MainPage.module.css';
 
 function MainPage() {
     const [objects, setObjects] = useState<RealEstateObject[]>([]);
@@ -28,12 +29,15 @@ function MainPage() {
 
     // create a new empty object
     async function handleCreateObject(name: string) {
+        setIsLoading(true);
         try {
             const newObject = await createRealEstateObject(name || "Новий об'єкт");
             setObjects(prevObjects => [...prevObjects, newObject]);
             navigate('/onboarding/' + newObject.id);
         } catch (error) {
             console.error("Error creating real estate object:", error);
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -41,7 +45,6 @@ function MainPage() {
     async function handleDeleteObject(objId: number) {
         setIsLoading(true);
         try {
-            // TODO: add errors handling
             await deleteRealEstateObject(objId);
             setObjects(prevObjects => prevObjects.filter(obj => obj.id !== objId));
         } catch (error) {
@@ -58,32 +61,47 @@ function MainPage() {
     }
 
     if (isLoading) {
-        return <p>Loading...</p>;
+        return (
+            <div className={styles.globalContainer}>
+                <div className={styles.mainContainer}>
+                    <p className={styles.loadingText}>Завантаження...</p>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <main>
-            <h1>Main Page</h1>
-            <section>
-                <h2>Добавити новий об'єкт</h2>
-                <CreateEmptyObject
-                    onCreate={handleCreateObject}
-                />
-            </section>
-            <section>
-                <h2>Список об'єктів</h2>
+        <div className={styles.globalContainer}>
+            <main className={styles.mainContainer}>
+                <h1 className={styles.pageTitle}>Мої об'єкти</h1>
 
-                {objects.length === 0 && <p>Об'єкти відсутні. Додайте новий.</p>}
+                <section className={styles.section}>
+                    <h2>Додати новий об'єкт</h2>
+                    <CreateEmptyObject
+                        onCreate={handleCreateObject}
+                    />
+                </section>
 
-                {objects.map(item => (
-                    <ShowObjectItem key={item.id}
+                <section className={styles.section}>
+                    <h2>Список об'єктів</h2>
+
+                    {objects.length === 0 ? (
+                        <p className={styles.emptyState}>Об'єкти відсутні. Додайте новий.</p>
+                    ) : (
+                        <div className={styles.objectsGrid}>
+                            {objects.map(item => (
+                                <ShowObjectItem
+                                    key={item.id}
                                     {...item}
                                     onClick={handleObjectClick}
                                     onDelete={handleDeleteObject}
-                    />
-                ))}
-            </section>
-        </main>
+                                />
+                            ))}
+                        </div>
+                    )}
+                </section>
+            </main>
+        </div>
     );
 }
 
