@@ -1,11 +1,18 @@
 import type {Premises} from "../interfaces/Premises.ts";
+import type {DynamicParametersConfig} from "../interfaces/DynamicParametersConfig.ts";
+import type {StaticParametersConfig} from "../interfaces/StaticParameters.ts";
+import { scoring } from "../core/scoring.ts";
+import type {ColumnPriorities} from "./PremisesParameters.tsx";
 
 interface ChessboardTableProps {
     premises: Premises[];
     selectedMetric: string;
+    dynamicConfig: DynamicParametersConfig;
+    staticConfig: StaticParametersConfig;
+    ranging: ColumnPriorities;
 }
 
-function ChessboardTable({ premises, selectedMetric }: ChessboardTableProps) {
+function ChessboardTable({ premises, selectedMetric, staticConfig, dynamicConfig, ranging }: ChessboardTableProps) {
     // const [bonusDisplay, setBonusDisplay] = useState<boolean>(false);
     // const [presetIndex, setPresetIndex] = useState<number>(0);
 
@@ -16,32 +23,33 @@ function ChessboardTable({ premises, selectedMetric }: ChessboardTableProps) {
         const item = premises.find((flat) => flat.floor === floor && flat.number_of_unit === unit);
         if (!item) return "N/A";
 
-        switch (selectedMetric) {
-            case "Unit Number":
-                return item.number_of_unit;
-            case "Scoring":
-                // TODO ???
-                break;
-            case "presetValue":
-                // TODO ???
-                break;
-            case "actualPricePerSQM":
-                // TODO ????
-                break;
-            case "normContributeRT":
-                // TODO ????
-                break;
-            case "conditionalValue":
-                // TODO ????
-                break;
-            case "conditionalCost":
-                // TODO ????
-                break;
-            case "transformRate":
-                // TODO ????
-                break;
-            default:
-                return "N/A";
+        if (selectedMetric === "Unit Number") {
+            return item.number;
+        } else if (selectedMetric === "Scoring") {
+            const data = scoring(
+                item,
+                premises.filter(flat => flat.id !== item.id),
+                dynamicConfig,
+                staticConfig,
+                ranging
+            );
+            console.log(data);
+            return data;
+        } else if (selectedMetric === "presetValue") {
+            // TODO ??? - на основі скорінг
+        } else if (selectedMetric === "actualPricePerSQM") {
+            // TODO ????
+            return item.price_per_meter;
+        } else if (selectedMetric === "normContributeRT") {
+            // TODO ????
+        } else if (selectedMetric === "conditionalValue") {
+            // TODO ????
+        } else if (selectedMetric === "conditionalCost") {
+            // TODO ????
+        } else if (selectedMetric === "transformRate") {
+            // TODO ????
+        } else {
+            return "N/A";
         }
     }
 

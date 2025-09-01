@@ -54,7 +54,7 @@ function EnginePriceCalculator({ realObject, selectedEngine }: EnginePriceCalcul
 
         let price = basePrice * conditionalValue;
         if (selectedEngine === "Oh, Elon") {
-            // TODO
+            price = basePrice + conditionalValue * (1 + (realObject?.pricing_configs[0].content.staticConfig.maxify_factor || 0)) * (1 + (realObject?.pricing_configs[0].content.staticConfig.overestimate_correct_factor || 0) * 2);
         } else if (selectedEngine === "Regular") {
             price = basePrice * conditionalValue * (1 - (realObject.pricing_configs[0].content.staticConfig.bargainGap) || 0 / 100);
         }

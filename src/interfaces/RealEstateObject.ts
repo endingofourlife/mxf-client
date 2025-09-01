@@ -20,4 +20,6 @@ export interface RealEstateObject {
     committed_prices: CommittedPrices[];
     income_plans: IncomePlan[];
     status_mappings: StatusMapping[];
+
+    // one to one -> distribution config
 }

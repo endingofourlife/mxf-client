@@ -1,3 +1,5 @@
+import type {ChangeEvent} from "react";
+
 interface SelectViewFromDataFrameProps {
     onViewChange?: (viewId: string) => void;
 }
@@ -65,7 +67,7 @@ function SelectViewFromDataFrame({ onViewChange }: SelectViewFromDataFrameProps)
                             <option
                                 key={view.id}
                                 value={view.id}
-                                onClick={handleViewChange}
+                                // onClick={handleViewChange}
                             >
                                 {view.name}
                             </option>
