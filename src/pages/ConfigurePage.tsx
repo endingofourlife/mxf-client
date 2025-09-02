@@ -40,13 +40,17 @@ function ConfigurePage() {
                 setPriorities(response.content?.ranging || {});
                 setPricingConfig(response);
             } catch (error) {
-                console.error("Error fetching pricing config:", error);
-                alert('Не вдалося завантажити конфігурацію ціноутворення.');
+                // console.error("Error fetching pricing config:", error);
+                // alert('Не вдалося завантажити конфігурацію ціноутворення.');
             } finally {
                 setIsLoading(false);
             }
         }
         if (activeObject && activeObject.id === Number(id)){
+            if (activeObject.pricing_configs.length === 0) {
+                setIsLoading(false);
+                return;
+            }
             setStaticConfig(activeObject.pricing_configs[0].content.staticConfig);
             setDynamicConfig(activeObject.pricing_configs[0].content.dynamicConfig);
             setPriorities(activeObject.pricing_configs[1].content.ranging || {});

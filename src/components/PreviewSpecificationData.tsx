@@ -28,7 +28,7 @@ function PreviewSpecificationData({ data }: PreviewSpecificationDataProps) {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentItems = data.slice(startIndex, startIndex + itemsPerPage);
 
-    const formatValue = (value: string, header: string) => {
+    const formatValue = (value: string | unknown, header: string) => {
         if (value === null || value === undefined || value === '') {
             return '-';
         }
