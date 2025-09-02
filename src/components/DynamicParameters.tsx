@@ -22,11 +22,23 @@ function DynamicParameters({premises, currentConfig, onConfigChange}: DynamicPar
         }
     }, [currentConfig]);
 
-    function getAvailableFields(): string[]{
+    function getAvailableFields(): string[] {
         const firstPremise = premises[0];
-        return Object.keys(firstPremise).filter(key =>
-            key !== 'id' && key !== 'reo_id' && key !== "uploaded"
+        const baseFields = Object.keys(firstPremise).filter(key =>
+            key !== 'id' && key !== 'reo_id' && key !== "uploaded" && key !== "customcontent"
         );
+
+        // Отримуємо всі унікальні ключі з customcontent з усіх premises
+        const customContentKeys = new Set<string>();
+        premises.forEach(premise => {
+            if (premise.customcontent && typeof premise.customcontent === 'object') {
+                Object.keys(premise.customcontent).forEach(key => {
+                    customContentKeys.add(key);
+                });
+            }
+        });
+
+        return [...baseFields, ...Array.from(customContentKeys)];
     }
 
     function handleFieldToggle(field: string) {
@@ -101,7 +113,7 @@ function DynamicParameters({premises, currentConfig, onConfigChange}: DynamicPar
                     <label key={field} className={styles.fieldLabel}>
                         <input
                             type="checkbox"
-                            checked={config.importantFields[field]}
+                            checked={!!config.importantFields[field]}
                             onChange={() => handleFieldToggle(field)}
                             id={`${field}_box`}
                         />

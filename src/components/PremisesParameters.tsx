@@ -25,17 +25,52 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
     const [selectedValues, setSelectedValues] = useState<string[]>([]);
     const [newGroupName, setNewGroupName] = useState("");
 
-    const columnNames = Object.keys(selectedColumns).filter(key => selectedColumns[key]);
+    // Отримуємо всі ключі з customcontent
+    const customContentKeys = new Set<string>();
+    premises.forEach(p => {
+        if (p.customcontent && typeof p.customcontent === 'object') {
+            Object.keys(p.customcontent).forEach(key => {
+                customContentKeys.add(key);
+            });
+        }
+    });
+
+    // Фільтруємо колонки - прибираємо customcontent і додаємо його ключі
+    // Але перевіряємо, щоб не було дублікатів
+    const columnNames = [
+        ...Object.keys(selectedColumns)
+            .filter(key => selectedColumns[key] && key !== 'customcontent'),
+        ...Array.from(customContentKeys).filter(key => !selectedColumns[key])
+    ];
 
     // Получаем уникальные значения для выбранной колонки
     const getUniqueValues = (column: string) => {
-        const valuesSet = new Set(
-            premises
-                .map(p => p[column as keyof Premises])
-                .filter((val): val is string | number | boolean => val != null)
-                .map(val => String(val))
-        );
-        const allUnique = Array.from(valuesSet);
+        let allUnique: string[] = [];
+
+        if (customContentKeys.has(column)) {
+            // Якщо це ключ з customcontent
+            const valuesSet = new Set<string>();
+
+            premises.forEach(p => {
+                if (p.customcontent && p.customcontent[column] !== undefined) {
+                    const value = p.customcontent[column];
+                    if (value !== null && value !== undefined) {
+                        valuesSet.add(String(value));
+                    }
+                }
+            });
+
+            allUnique = Array.from(valuesSet);
+        } else {
+            // Обычная обработка для других колонок
+            const valuesSet = new Set(
+                premises
+                    .map(p => p[column as keyof Premises])
+                    .filter((val): val is string | number | boolean => val != null)
+                    .map(val => String(val))
+            );
+            allUnique = Array.from(valuesSet);
+        }
 
         // Если для этой колонки еще нет приоритетов, создаем начальные
         if (!priorities[column]) {

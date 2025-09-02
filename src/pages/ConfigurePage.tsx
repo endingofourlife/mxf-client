@@ -40,7 +40,7 @@ function ConfigurePage() {
                 setPriorities(response.content?.ranging || {});
                 setPricingConfig(response);
             } catch (error) {
-                // console.error("Error fetching pricing config:", error);
+                console.error("Error fetching pricing config:", error);
                 // alert('Не вдалося завантажити конфігурацію ціноутворення.');
             } finally {
                 setIsLoading(false);
@@ -51,9 +51,10 @@ function ConfigurePage() {
                 setIsLoading(false);
                 return;
             }
-            setStaticConfig(activeObject.pricing_configs[0].content.staticConfig);
-            setDynamicConfig(activeObject.pricing_configs[0].content.dynamicConfig);
-            setPriorities(activeObject.pricing_configs[1].content.ranging || {});
+            console.log('Using existing activeObject pricing config');
+            setStaticConfig(activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.staticConfig);
+            setDynamicConfig(activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.dynamicConfig);
+            setPriorities(activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.ranging || {});
             setIsLoading(false);
             return;
         }
@@ -65,12 +66,25 @@ function ConfigurePage() {
         navigate(-1);
     }
 
+    function checkIsEngineReady(): boolean {
+        if (!dynamicConfig || !staticConfig) return false;
+        return true;
+    }
+
+    function handleGoToEngine(){
+        if (!checkIsEngineReady()){
+            alert('Будь ласка, заповніть всі параметри перед переходом до Engine');
+            return;
+        }
+        navigate(`/engine/${id}`);
+    }
+
     async function handleSaveConfig(){
-        if (!dynamicConfig || !staticConfig || !id) {
+        if (!dynamicConfig || !staticConfig) {
             alert('Будь ласка, заповніть всі параметри');
             return;
         }
-
+        setIsLoading(true);
         try {
             const configToSave: PricingConfig = {
                 id: pricingConfig?.id || 0,
@@ -89,10 +103,15 @@ function ConfigurePage() {
 
             const response = await createPricingConfig(Number(id), configToSave);
             setPricingConfig(response);
+            const updatedObject = {...activeObject, staticConfig: response};
+            setActiveObject(updatedObject);
+            console.log('Saved pricing config:', response);
             alert('Конфігурацію успішно збережено!');
         } catch (error) {
             console.error("Error saving pricing config:", error);
             alert('Не вдалося зберегти конфігурацію.');
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -153,7 +172,7 @@ function ConfigurePage() {
                     Зберегти конфігурацію
                 </button>
                 <button
-                    onClick={() => navigate(`/engine/${id}`)}
+                    onClick={handleGoToEngine}
                     className={styles.navButton}
                 >
                     Перейти до Engine

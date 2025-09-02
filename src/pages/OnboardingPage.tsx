@@ -63,6 +63,8 @@ function OnboardingPage() {
             if (previewSpecData.length === 0) return;
             const transformedData = transformToPremisesCreateRequest(previewSpecData, Number(id));
             const response = await updatePremisesBulk(transformedData);
+            const newActiveObject = {...activeObject, premises: response};
+            setActiveObject(newActiveObject);
             console.log('Successfully saved specification data:', response);
         } catch (error) {
             console.error('Error saving specification data:', error);
@@ -79,6 +81,8 @@ function OnboardingPage() {
             if (previewIncomeData.length === 0) return;
             const transformedData = transformToIncomePlanCreateRequest(previewIncomeData, Number(id));
             const response = await updateIncomePlanBulk(transformedData);
+            const newActiveObject = {...activeObject, income_plans: response};
+            setActiveObject(newActiveObject);
             console.log('Saving income plan data:', response);
         } catch (error) {
             console.error('Error saving income plan data:', error);

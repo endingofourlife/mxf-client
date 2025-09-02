@@ -12,8 +12,8 @@ export interface IncomePlanCreateRequest {
     price_per_sqm_end: number;
 }
 
-export async function updateIncomePlanBulk(request: IncomePlanCreateRequest[]){
-    const { data } = await api.post<IncomePlan>("/income-plans/bulk", {
+export async function updateIncomePlanBulk(request: IncomePlanCreateRequest[]): Promise<IncomePlan[]>{
+    const { data } = await api.post<IncomePlan[]>("/income-plans/bulk", {
         "plans": request
     });
     return data;

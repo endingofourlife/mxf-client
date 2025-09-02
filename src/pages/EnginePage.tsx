@@ -75,8 +75,8 @@ function EnginePage() {
                 <ChessboardTable
                     selectedMetric={selectedMetric}
                     premises={activeObject.premises}
-                    dynamicConfig={activeObject.pricing_configs[0].content.dynamicConfig}
-                    staticConfig={activeObject.pricing_configs[0].content.staticConfig}
+                    dynamicConfig={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.dynamicConfig}
+                    staticConfig={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.staticConfig}
                     ranging={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.ranging}
                 />
             </section>

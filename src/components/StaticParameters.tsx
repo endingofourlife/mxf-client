@@ -88,6 +88,7 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
             bonusScale
         }
         setStaticConfig(newConfig);
+        alert('Статичні параметри збережено!');
     }
 
     return (
