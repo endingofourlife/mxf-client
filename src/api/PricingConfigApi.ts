@@ -7,7 +7,7 @@ export async function fetchPricingConfig(objId: number){
 }
 
 export async function createPricingConfig(objId: number, config: PricingConfig) {
-    const { data } = await api.post<PricingConfig>('/pricing-configs/', {
+    const { data } = await api.post<PricingConfig[]>('/pricing-configs/', {
         'is_active': true,
         'reo_id': objId,
         'content': config.content

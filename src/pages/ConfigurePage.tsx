@@ -102,9 +102,7 @@ function ConfigurePage() {
             };
 
             const response = await createPricingConfig(Number(id), configToSave);
-            setPricingConfig(response);
-            const updatedObject = {...activeObject, staticConfig: response};
-            setActiveObject(updatedObject);
+            setPricingConfig(response[response.length-1]);
             console.log('Saved pricing config:', response);
             alert('Конфігурацію успішно збережено!');
         } catch (error) {
