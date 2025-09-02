@@ -5,11 +5,17 @@ import EditRealEstateObject from "../components/EditRealEstateObject.tsx";
 import UploadSpecificationFile from "../components/UploadSpecificationFile.tsx";
 import type {RealEstateObjectData} from "../interfaces/RealEstateObjectData.ts";
 import { updatePremisesBulk } from "../api/PremisesApi.ts";
-import {transformToIncomePlanCreateRequest, transformToPremisesCreateRequest} from "../core/Mappers.ts";
+import {
+    mapIncomePlanToIncomePlanData,
+    mapPremisesToRealEstateObjectData,
+    transformToIncomePlanCreateRequest,
+    transformToPremisesCreateRequest
+} from "../core/Mappers.ts";
 import UploadIncomeFile from "../components/UploadIncomeFile.tsx";
 import type {IncomePlanData} from "../interfaces/IncomePlanData.ts";
 import { updateIncomePlanBulk } from "../api/IncomePlanApi.ts";
 import {useActiveRealEstateObject} from "../contexts/ActiveRealEstateObjectContext.tsx";
+import styles from './OnBoardingPage.module.css';
 
 function OnboardingPage() {
     const { id } = useParams();
@@ -26,89 +32,132 @@ function OnboardingPage() {
 
     // Fetch real estate object data
     useEffect(() => {
+        // The function to fetch and set the active real estate object.
+        // It checks if there are premises and income plans and maps them to the preview data format.
         async function getObjectData(objId: number){
-           try {
-                const response = await fetchRealEstateObject(objId);
-                setActiveObject(response);
-           } catch (error) {
-                console.error("Error fetching real estate object:", error);
-                alert('Не вдалося завантажити дані об\'єкта.');
-           } finally {
-               setIsLoading(false);
-           }
-        }
-        if (activeObject && activeObject.id === Number(id)){
+            if (!activeObject || activeObject.id !== Number(id)){
+                setIsLoading(true);
+                try {
+                    const response = await fetchRealEstateObject(objId);
+                    setActiveObject(response);
+                } catch (error) {
+                    console.error("Error fetching real estate object:", error);
+                    alert('Не вдалося завантажити дані об\'єкта.');
+                }
+            }
+            if (activeObject && activeObject.premises.length > 0){
+                const formattedPremises = mapPremisesToRealEstateObjectData(activeObject.premises);
+                setPreviewSpecData(formattedPremises);
+                const formattedIncomePlans = mapIncomePlanToIncomePlanData(activeObject.income_plans);
+                setPreviewIncomeData(formattedIncomePlans);
+            }
             setIsLoading(false);
-            return;
         }
         getObjectData(Number(id));
     }, [id, activeObject, setActiveObject, setIsLoading]);
 
     // Save uploaded specification data to the API
     async function saveSpecificationData(){
+        setIsLoading(true);
         try {
+            if (previewSpecData.length === 0) return;
             const transformedData = transformToPremisesCreateRequest(previewSpecData, Number(id));
             const response = await updatePremisesBulk(transformedData);
             console.log('Successfully saved specification data:', response);
         } catch (error) {
             console.error('Error saving specification data:', error);
             alert('Не вдалося зберегти дані специфікації.');
+        } finally {
+            setIsLoading(false);
         }
     }
 
     // Save uploaded income plan data to the API
     async function saveIncomePlanData(){
+        setIsLoading(true);
         try {
+            if (previewIncomeData.length === 0) return;
             const transformedData = transformToIncomePlanCreateRequest(previewIncomeData, Number(id));
             const response = await updateIncomePlanBulk(transformedData);
             console.log('Saving income plan data:', response);
         } catch (error) {
             console.error('Error saving income plan data:', error);
             alert('Не вдалося зберегти дані плану доходів.');
+        } finally {
+            setIsLoading(false);
         }
     }
 
+    function handleBackBtn(){
+        navigate(-1);
+    }
 
     if (!id || !activeObject || !activeObject.id || isLoading) {
-        return <p>Загрузка</p>;
+        return (
+            <main className={styles.main}>
+                <p className={styles.loading}>Завантаження...</p>
+            </main>
+        );
     }
 
     return (
-        <main>
-            <h1>OnboardingPage</h1>
+        <main className={styles.main}>
+            <header className={styles.header}>
+                <h1 className={styles.pageTitle}>Налаштування об'єкта</h1>
+                <button onClick={handleBackBtn} className={styles.backButton}>
+                    Назад
+                </button>
+            </header>
 
             {/* Edit Object Section */}
-            <section>
-                {isEditMode ? (<>
+            <section className={styles.section}>
+                {isEditMode ? (
                     <EditRealEstateObject {...activeObject} setIsEditMode={setIsEditMode} />
-                </>) : (
-                    <p>
-                        {activeObject?.name}
-                        <button onClick={() => setIsEditMode(true)}>
+                ) : (
+                    <div className={styles.objectHeader}>
+                        <h2 className={styles.objectName}>{activeObject?.name}</h2>
+                        <button
+                            onClick={() => setIsEditMode(true)}
+                            className={styles.editButton}
+                        >
                             Редагувати
                         </button>
-                    </p>
+                    </div>
                 )}
             </section>
 
             {/* Upload Specification Section */}
-            <UploadSpecificationFile isPreview={isSpecPreview}
-                                     setIsPreview={setIsSpecPreview}
-                                     previewSpecData={previewSpecData}
-                                     setPreviewSpecData={setPreviewSpecData}
-            />
-            <button onClick={saveSpecificationData}>Save Specification File</button>
+            <section className={styles.section}>
+                <UploadSpecificationFile
+                    isPreview={isSpecPreview}
+                    setIsPreview={setIsSpecPreview}
+                    previewSpecData={previewSpecData}
+                    setPreviewSpecData={setPreviewSpecData}
+                />
+                <button onClick={saveSpecificationData} className={styles.saveButton} disabled={previewSpecData.length === 0}>
+                    Зберегти дані специфікації
+                </button>
+            </section>
 
             {/* Upload Income Plans Section */}
-            <UploadIncomeFile isPreview={isIncomePreview}
-                              previewIncomeData={previewIncomeData}
-                              setIsPreview={setIsIncomePreview}
-                              setPreviewIncomeData={setPreviewIncomeData} />
-            <button onClick={saveIncomePlanData}>Save income plan file</button>
+            <section className={styles.section}>
+                <UploadIncomeFile
+                    isPreview={isIncomePreview}
+                    previewIncomeData={previewIncomeData}
+                    setIsPreview={setIsIncomePreview}
+                    setPreviewIncomeData={setPreviewIncomeData}
+                />
+                <button onClick={saveIncomePlanData} className={styles.saveButton}>
+                    Зберегти дані плану доходів
+                </button>
+            </section>
 
-            <button onClick={() => {
-                navigate("/configure/" + activeObject.id);
-            }}>Перейти на конфіг</button>
+            <button
+                onClick={() => navigate("/configure/" + activeObject.id)}
+                className={styles.navButton}
+            >
+                Перейти до конфігурації
+            </button>
         </main>
     );
 }

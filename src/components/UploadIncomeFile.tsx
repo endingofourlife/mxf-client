@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import PreviewIncomeData from './PreviewIncomeData';
 import type {IncomePlanData} from '../interfaces/IncomePlanData';
 import type {ChangeEvent} from 'react';
+import styles from './UploadIncomeFile.module.css';
 
 interface UploadIncomeFileProps {
     isPreview: boolean;
@@ -99,22 +100,32 @@ function UploadIncomeFile({
     };
 
     return (
-        <section>
-            <h2>Upload Income File</h2>
-            <p>
-                <label htmlFor="income_file">Select a file</label>
+        <section className={styles.section}>
+            <h2>Завантаження плану доходів</h2>
+
+            <div className={styles.uploadArea}>
                 <input
                     type="file"
                     accept=".xlsx,.xls"
                     id="income_file"
                     onChange={handleFileChange}
+                    className={styles.fileInput}
                 />
-            </p>
-            {isPreview ? (
-                <button onClick={() => setIsPreview(false)}>Приховати завантажені дані</button>
-            ) : (
-                <button onClick={() => setIsPreview(true)}>Показати завантажені дані</button>
-            )}
+                <label htmlFor="income_file" className={styles.fileLabel}>
+                    Обрати файл Excel
+                </label>
+                <p className={styles.fileInfo}>
+                    Підтримуються файли формату .xlsx та .xls
+                </p>
+            </div>
+
+            <button
+                onClick={() => setIsPreview(!isPreview)}
+                className={styles.toggleButton}
+            >
+                {isPreview ? 'Приховати завантажені дані' : 'Показати завантажені дані'}
+            </button>
+
             {isPreview && <PreviewIncomeData data={previewIncomeData} />}
         </section>
     );

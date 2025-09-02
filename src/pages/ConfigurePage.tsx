@@ -10,11 +10,11 @@ import type {DynamicParametersConfig} from "../interfaces/DynamicParametersConfi
 import type {PricingConfig} from "../interfaces/PricingConfig.ts";
 import PremisesParameters, {type ColumnPriorities} from "../components/PremisesParameters.tsx";
 import {useActiveRealEstateObject} from "../contexts/ActiveRealEstateObjectContext.tsx";
+import styles from "./ConfigurePage.module.css";
 
 function ConfigurePage() {
     const { id } = useParams();
     const {activeObject, setActiveObject, isLoading, setIsLoading} = useActiveRealEstateObject();
-    // const [realEstateObject, setRealEstateObject] = useState<RealEstateObject | null>(null);
     const [dynamicConfig, setDynamicConfig] = useState<DynamicParametersConfig | null>(null);
     const [staticConfig, setStaticConfig] = useState<StaticParametersConfig | null>(null);
     const [pricingConfig, setPricingConfig] = useState<PricingConfig | null>(null);
@@ -42,13 +42,13 @@ function ConfigurePage() {
             } catch (error) {
                 console.error("Error fetching pricing config:", error);
                 alert('Не вдалося завантажити конфігурацію ціноутворення.');
+            } finally {
+                setIsLoading(false);
             }
         }
         if (activeObject && activeObject.id === Number(id)){
             setStaticConfig(activeObject.pricing_configs[0].content.staticConfig);
             setDynamicConfig(activeObject.pricing_configs[0].content.dynamicConfig);
-            console.log(activeObject);
-            console.log('************************************')
             setPriorities(activeObject.pricing_configs[1].content.ranging || {});
             setIsLoading(false);
             return;
@@ -56,6 +56,10 @@ function ConfigurePage() {
         fetchData();
         getPricingConfig();
     }, [activeObject, id, setActiveObject, setIsLoading]);
+
+    function handleBackBtn(){
+        navigate(-1);
+    }
 
     async function handleSaveConfig(){
         if (!dynamicConfig || !staticConfig || !id) {
@@ -89,33 +93,68 @@ function ConfigurePage() {
     }
 
     if (!activeObject || !activeObject.id || isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className={styles.loadingContainer}>
+                <p className={styles.loading}>Завантаження...</p>
+            </div>
+        );
     }
 
     return (
-        <main>
-            <h1>ConfigurePage</h1>
-            <p>Конфігурація для об'єкта {activeObject?.name}</p>
+        <main className={styles.main}>
+            <header className={styles.header}>
+                <h1 className={styles.pageTitle}>Конфігурація</h1>
+                <button onClick={handleBackBtn} className={styles.backButton}>
+                    Назад
+                </button>
+            </header>
 
-            <DynamicParameters premises={activeObject.premises} currentConfig={dynamicConfig} onConfigChange={setDynamicConfig} />
+            <p className={styles.objectInfo}>
+                Конфігурація для об'єкта: <strong>{activeObject?.name}</strong>
+            </p>
+
+            <section className={styles.section}>
+                <h2>Динамічні параметри</h2>
+                <DynamicParameters
+                    premises={activeObject.premises}
+                    currentConfig={dynamicConfig}
+                    onConfigChange={setDynamicConfig}
+                />
+            </section>
 
             {dynamicConfig?.importantFields && (
-                <PremisesParameters premises={activeObject.premises}
-                                    selectedColumns={dynamicConfig?.importantFields}
-                                    setPriorities={setPriorities}
-                                    priorities={priorities}
-                />
+                <section className={styles.section}>
+                    <h2>Пріоритети параметрів</h2>
+                    <PremisesParameters
+                        premises={activeObject.premises}
+                        selectedColumns={dynamicConfig?.importantFields}
+                        setPriorities={setPriorities}
+                        priorities={priorities}
+                    />
+                </section>
             )}
-            <StaticParameters currentConfig={staticConfig}
-                              setStaticConfig={setStaticConfig}
-                              incomePlans={activeObject.income_plans || []}
-                              premises={activeObject.premises || []}
-            />
 
-            <button onClick={handleSaveConfig}>Зберегти конфіг</button>
-            <button onClick={() => {
-                navigate(`/engine/${id}`);
-            }}>Go to engine</button>
+            <section className={styles.section}>
+                <h2>Статичні параметри</h2>
+                <StaticParameters
+                    currentConfig={staticConfig}
+                    setStaticConfig={setStaticConfig}
+                    incomePlans={activeObject.income_plans || []}
+                    premises={activeObject.premises || []}
+                />
+            </section>
+
+            <div className={styles.actions}>
+                <button onClick={handleSaveConfig} className={styles.saveButton}>
+                    Зберегти конфігурацію
+                </button>
+                <button
+                    onClick={() => navigate(`/engine/${id}`)}
+                    className={styles.navButton}
+                >
+                    Перейти до Engine
+                </button>
+            </div>
         </main>
     );
 }

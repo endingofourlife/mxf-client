@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import styles from "./EngineHeader.module.css";
 
 interface EngineHeaderProps {
     objectName: string;
@@ -24,14 +25,13 @@ function EngineHeader({
     };
 
     return (
-        <section>
-            <h2>{objectName || "Без назви"}</h2>
-            <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <label htmlFor="engine">
+        <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>{objectName || "Без назви"}</h2>
+            <div className={styles.selectorsContainer}>
+                <label className={styles.label}>
                     Движок:
                     <select
-                        name="engine"
-                        id="engine"
+                        className={styles.select}
                         value={selectedEngine}
                         onChange={handleEngineChange}
                     >
@@ -39,11 +39,10 @@ function EngineHeader({
                         <option value="Oh, Elon">Oh, Elon</option>
                     </select>
                 </label>
-                <label htmlFor="metric">
+                <label className={styles.label}>
                     Метрика:
                     <select
-                        name="metric"
-                        id="metric"
+                        className={styles.select}
                         value={selectedMetric}
                         onChange={handleMetricChange}
                     >

@@ -1,4 +1,4 @@
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {useEffect, useState} from "react";
 import {fetchRealEstateObject} from "../api/RealEstateObjectApi.ts";
 import EngineHeader from "../components/EngineHeader.tsx";
@@ -6,16 +6,16 @@ import EnginePriceCalculator from "../components/EnginePriceCalculator.tsx";
 import ChessboardTable from "../components/ChessboardTable.tsx";
 import SelectViewFromDataFrame from "../components/SelectViewFromDataFrame.tsx";
 import {useActiveRealEstateObject} from "../contexts/ActiveRealEstateObjectContext.tsx";
+import styles from "./EnginePage.module.css";
 
 function EnginePage() {
     const { id } = useParams();
     const {activeObject, setActiveObject, isLoading, setIsLoading} = useActiveRealEstateObject();
-    // const [realEstateObject, setRealEstateObject] = useState<RealEstateObject | null>(null);
     const [selectedEngine, setSelectedEngine] = useState("Regular");
     const [selectedMetric, setSelectedMetric] = useState("Unit Number");
     const [selectedView, setSelectedView] = useState("basic-metrics");
+    const navigate = useNavigate();
 
-    // Fetch estate object and pricing config (static and dynamic) data
     useEffect(() => {
         async function fetchData(){
             try {
@@ -36,13 +36,27 @@ function EnginePage() {
         fetchData();
     }, [activeObject, id, setActiveObject, setIsLoading]);
 
+    function handleBackBtn(){
+        navigate(-1);
+    }
+
     if (!activeObject || isLoading) {
-        return <div>Loading...</div>;
+        return <div className={styles.loading}>Завантаження...</div>;
     }
 
     return (
-        <main>
-            <h2>Engine Page</h2>
+        <main className={styles.main}>
+            <header className={styles.header}>
+                <h1 className={styles.pageTitle}>Engine</h1>
+                <button onClick={handleBackBtn} className={styles.backButton}>
+                    Назад
+                </button>
+            </header>
+
+            <p className={styles.objectInfo}>
+                Engine для об'єкта: <strong>{activeObject?.name}</strong>
+            </p>
+
             <EngineHeader
                 objectName={activeObject.name}
                 selectedEngine={selectedEngine}
@@ -50,18 +64,27 @@ function EnginePage() {
                 selectedMetric={selectedMetric}
                 setSelectedMetric={setSelectedMetric}
             />
+
             <EnginePriceCalculator
                 selectedEngine={selectedEngine}
                 realObject={activeObject}
             />
-            <ChessboardTable
-                selectedMetric={selectedMetric}
-                premises={activeObject.premises}
-                dynamicConfig={activeObject.pricing_configs[0].content.dynamicConfig}
-                staticConfig={activeObject.pricing_configs[0].content.staticConfig}
-                ranging={activeObject.pricing_configs[0].content.ranging}
-            />
-            <SelectViewFromDataFrame onViewChange={setSelectedView} />
+
+            <section className={styles.section}>
+                <h2>Шахівниця цін</h2>
+                <ChessboardTable
+                    selectedMetric={selectedMetric}
+                    premises={activeObject.premises}
+                    dynamicConfig={activeObject.pricing_configs[0].content.dynamicConfig}
+                    staticConfig={activeObject.pricing_configs[0].content.staticConfig}
+                    ranging={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.ranging}
+                />
+            </section>
+
+            <section className={styles.section}>
+                <h2>Вибір подання даних</h2>
+                <SelectViewFromDataFrame onViewChange={setSelectedView} />
+            </section>
         </main>
     );
 }

@@ -3,6 +3,7 @@ import type {DynamicParametersConfig} from "../interfaces/DynamicParametersConfi
 import type {StaticParametersConfig} from "../interfaces/StaticParameters.ts";
 import { scoring } from "../core/scoring.ts";
 import type {ColumnPriorities} from "./PremisesParameters.tsx";
+import styles from "./ChessboardTable.module.css";
 
 interface ChessboardTableProps {
     premises: Premises[];
@@ -53,33 +54,56 @@ function ChessboardTable({ premises, selectedMetric, staticConfig, dynamicConfig
         }
     }
 
-    return (
-        <section>
-            <h2>Chessboard table</h2>
+    const getCellClassName = (value: string | number | undefined) => {
+        if (typeof value === 'string' && value.includes('₴')) {
+            return styles.currencyCell;
+        }
+        if (typeof value === 'number' || !isNaN(Number(value))) {
+            return styles.numberCell;
+        }
+        return styles.textCell;
+    };
 
-            <table>
-                <thead>
+    return (
+        <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Шахівниця цін</h2>
+            <p className={styles.metricInfo}>Метрика: <strong>{selectedMetric}</strong></p>
+
+            <div className={styles.tableContainer}>
+                <table className={styles.chessboardTable}>
+                    <thead>
                     <tr>
+                        <th className={styles.cornerHeader}>Поверх/Квартира</th>
                         {units.map((item) => (
-                            <th key={item}>
-                                Unit {item}
+                            <th key={item} className={styles.unitHeader}>
+                                №{item}
                             </th>
                         ))}
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     {floors.map((floor) => (
-                        <tr key={floor}>
-                            <td>{floor}</td>
-                            {units.map((unit) => (
-                                <td key={`${floor}_${unit}`}>
-                                    {getMetricValue(floor, unit)}
-                                </td>
-                            ))}
+                        <tr key={floor} className={styles.floorRow}>
+                            <td className={styles.floorHeader}>{floor}</td>
+                            {units.map((unit) => {
+                                const value = getMetricValue(floor, unit);
+                                return (
+                                    <td key={`${floor}_${unit}`} className={`${styles.cell} ${getCellClassName(value)}`}>
+                                        {value}
+                                    </td>
+                                );
+                            })}
                         </tr>
                     ))}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
+
+            <div className={styles.tableInfo}>
+                <p>Всього поверхів: <strong>{floors.length}</strong></p>
+                <p>Всього квартир: <strong>{units.length}</strong></p>
+                <p>Всього одиниць: <strong>{premises.length}</strong></p>
+            </div>
         </section>
     );
 }

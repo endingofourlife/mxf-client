@@ -1,5 +1,6 @@
 import {type FormEvent, useState} from "react";
 import {changeRealEstateObject} from "../api/RealEstateObjectApi.ts";
+import styles from './EditRealEstateObject.module.css';
 
 interface EditRealEstateObjectProps {
     id: number;
@@ -18,9 +19,11 @@ function EditRealEstateObject({ id, name, lat, lon, curr, url, setIsEditMode }: 
     const [formLon, setFormLon] = useState(lon ?? '');
     const [formCurr, setFormCurr] = useState(curr || '');
     const [formUrl, setFormUrl] = useState(url || '');
+    const [isLoading, setIsLoading] = useState(false);
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
+        setIsLoading(true);
         const payload = {
             name: formName,
             lat: parseFloat(formLat as string),
@@ -34,65 +37,94 @@ function EditRealEstateObject({ id, name, lat, lon, curr, url, setIsEditMode }: 
             setIsEditMode(false);
         } catch (error) {
             console.error("Error updating real estate object:", error);
+        } finally {
+            setIsLoading(false);
         }
     }
 
+    if (isLoading) {
+        return <p>Обновляю...</p>;
+    }
+
     return (
-        <section>
-            <h2>Редагування об'єкта</h2>
-            <p>Для редагування внесіть необхідні значення і натисніть "зберегти"</p>
-            <button onClick={() => setIsEditMode(false)}>
+        <section className={styles.section}>
+            <div className={styles.header}>
+                <h2>Редагування об'єкта</h2>
+                <p className={styles.instruction}>Для редагування внесіть необхідні значення і натисніть "зберегти"</p>
+            </div>
+
+            <button
+                onClick={() => setIsEditMode(false)}
+                className={styles.cancelButton}
+            >
                 Відмінити
             </button>
-            <form onSubmit={handleSubmit}>
-                <p>
-                    <label htmlFor="name">Name</label>
+
+            <form onSubmit={handleSubmit} className={styles.form}>
+                <div className={styles.formGroup}>
+                    <label htmlFor="name">Назва об'єкта</label>
                     <input
                         type="text"
                         value={formName}
                         id="name"
                         onChange={(e) => setFormName(e.target.value)}
+                        required
                     />
-                </p>
-                <p>
-                    <label htmlFor="lat">Latitude</label>
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label htmlFor="lat">Широта</label>
                     <input
                         type="number"
                         value={formLat}
                         id="lat"
-                        step="any" // Allow decimal numbers
+                        step="any"
                         onChange={(e) => setFormLat(e.target.value)}
+                        placeholder="50.450001"
                     />
-                </p>
-                <p>
-                    <label htmlFor="lon">Longitude</label>
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label htmlFor="lon">Довгота</label>
                     <input
                         type="number"
                         value={formLon}
                         id="lon"
                         step="any"
                         onChange={(e) => setFormLon(e.target.value)}
+                        placeholder="30.523333"
                     />
-                </p>
-                <p>
-                    <label htmlFor="curr">Currency</label>
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label htmlFor="curr">Валюта</label>
                     <input
                         type="text"
                         value={formCurr}
                         id="curr"
                         onChange={(e) => setFormCurr(e.target.value)}
+                        placeholder="UAH"
                     />
-                </p>
-                <p>
+                </div>
+
+                <div className={styles.formGroup}>
                     <label htmlFor="url">URL</label>
                     <input
-                        type="text"
+                        type="url"
                         value={formUrl}
                         id="url"
                         onChange={(e) => setFormUrl(e.target.value)}
+                        placeholder="https://example.com"
                     />
-                </p>
-                <button type="submit">Зберегти</button>
+                </div>
+
+                <button
+                    type="submit"
+                    className={styles.submitButton}
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Збереження...' : 'Зберегти зміни'}
+                </button>
             </form>
         </section>
     );

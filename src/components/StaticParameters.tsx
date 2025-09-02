@@ -3,6 +3,7 @@ import type {StaticParametersConfig} from "../interfaces/StaticParameters.ts";
 import {calculateOnboardingPrice} from "../core/pricingConfiguration.ts";
 import type {IncomePlan} from "../interfaces/IncomePlan.ts";
 import type {Premises} from "../interfaces/Premises.ts";
+import styles from "./StaticParameters.module.css";
 
 interface StaticParametersProps {
     currentConfig: StaticParametersConfig | null;
@@ -90,150 +91,174 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
     }
 
     return (
-        <section>
-            <h2>Статичні параметри</h2>
+        <section className={styles.section}>
+            <h2 className={styles.title}>Статичні параметри</h2>
 
             {currentConfig && (
-                <details>
-                    <summary>Поточні статичні параметр</summary>
-                    <pre>{JSON.stringify(currentConfig, null, 2)}</pre>
+                <details className={styles.details}>
+                    <summary className={styles.summary}>Поточні статичні параметри</summary>
+                    <pre className={styles.pre}>{JSON.stringify(currentConfig, null, 2)}</pre>
                 </details>
             )}
 
-            <form onSubmit={handleSubmit}>
-                <p>
-                    <label htmlFor="negotiation_discount">Bargain gap</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setBargainGap(Number(e.target.value))}
-                        id='negotiation_discount'
-                        step="0.01"
-                    />
-                </p>
+            <form onSubmit={handleSubmit} className={styles.form}>
+                <div className={styles.formGrid}>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="negotiation_discount" className={styles.label}>Bargain gap</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setBargainGap(Number(e.target.value))}
+                            id='negotiation_discount'
+                            step="0.01"
+                            value={bargainGap}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="maxify_factor">Maxify factor</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setMaxifyFactor(Number(e.target.value))}
-                        id='maxify_factor'
-                        step="0.01"
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="maxify_factor" className={styles.label}>Maxify factor</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setMaxifyFactor(Number(e.target.value))}
+                            id='maxify_factor'
+                            step="0.01"
+                            value={maxify_factor}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="current_price_per_sqm">Onboarding price per sq.m</label>
-                    <input
-                        type="number"
-                        id='current_price_per_sqm'
-                        value={current_price_per_sqm}
-                        readOnly
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="current_price_per_sqm" className={styles.label}>Onboarding price per sq.m</label>
+                        <input
+                            type="number"
+                            id='current_price_per_sqm'
+                            value={current_price_per_sqm}
+                            readOnly
+                            className={`${styles.input} ${styles.readonly}`}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="minimum_liq_refusal_price">Minimum liquidity refusal price per sq.m</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setMinimumLiqRefusalPrice(Number(e.target.value))}
-                        id='minimum_liq_refusal_price'
-                        step="0.01"
-                        required
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="minimum_liq_refusal_price" className={styles.label}>Minimum liquidity refusal price per sq.m</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setMinimumLiqRefusalPrice(Number(e.target.value))}
+                            id='minimum_liq_refusal_price'
+                            step="0.01"
+                            required
+                            value={minimum_liq_refusal_price}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="maximum_liq_refusal_price">Maximum liquidity refusal price per sq.m</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setMaximumLiqRefusalPrice(Number(e.target.value))}
-                        id='maximum_liq_refusal_price'
-                        step="0.01"
-                        required
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="maximum_liq_refusal_price" className={styles.label}>Maximum liquidity refusal price per sq.m</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setMaximumLiqRefusalPrice(Number(e.target.value))}
+                            id='maximum_liq_refusal_price'
+                            step="0.01"
+                            required
+                            value={maximum_liq_refusal_price}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="overestimate_correct_factor">Overestimate correction factor</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setOverestimateCorrectFactor(Number(e.target.value))}
-                        id='overestimate_correct_factor'
-                        step="0.01"
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="overestimate_correct_factor" className={styles.label}>Overestimate correction factor</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setOverestimateCorrectFactor(Number(e.target.value))}
+                            id='overestimate_correct_factor'
+                            step="0.01"
+                            value={overestimate_correct_factor}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="oversold_method">Oversold method</label>
-                    <select
-                        onChange={(e) => setOversoldMethod(e.target.value as 'pieces' | 'area')}
-                        id='oversold_method'
-                        value={oversold_method}
-                    >
-                        <option value="pieces">pieces</option>
-                        <option value="area">area</option>
-                    </select>
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="oversold_method" className={styles.label}>Oversold method</label>
+                        <select
+                            onChange={(e) => setOversoldMethod(e.target.value as 'pieces' | 'area')}
+                            id='oversold_method'
+                            value={oversold_method}
+                            className={styles.select}
+                        >
+                            <option value="pieces">pieces</option>
+                            <option value="area">area</option>
+                        </select>
+                    </div>
 
-                <p>
-                    <label htmlFor="sigma">Sigma (for similarity)</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setSigma(Number(e.target.value))}
-                        id='sigma'
-                        step="0.1"
-                        min="0.1"
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="sigma" className={styles.label}>Sigma (for similarity)</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setSigma(Number(e.target.value))}
+                            id='sigma'
+                            step="0.1"
+                            min="0.1"
+                            value={sigma}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="similarityThreshold">Similarity Threshold</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setSimilarityThreshold(Number(e.target.value))}
-                        id='similarityThreshold'
-                        step="0.01"
-                        min="0"
-                        max="1"
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="similarityThreshold" className={styles.label}>Similarity Threshold</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setSimilarityThreshold(Number(e.target.value))}
+                            id='similarityThreshold'
+                            step="0.01"
+                            min="0"
+                            max="1"
+                            value={similarityThreshold}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="maxBonus">Max Bonus</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setMaxBonus(Number(e.target.value))}
-                        id='maxBonus'
-                        step="0.1"
-                        min="0"
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="maxBonus" className={styles.label}>Max Bonus</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setMaxBonus(Number(e.target.value))}
+                            id='maxBonus'
+                            step="0.1"
+                            min="0"
+                            value={maxBonus}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="bonusFactor">Bonus Factor</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setBonusFactor(Number(e.target.value))}
-                        id='bonusFactor'
-                        step="0.01"
-                        min="0"
-                        max="1"
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="bonusFactor" className={styles.label}>Bonus Factor</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setBonusFactor(Number(e.target.value))}
+                            id='bonusFactor'
+                            step="0.01"
+                            min="0"
+                            max="1"
+                            value={bonusFactor}
+                            className={styles.input}
+                        />
+                    </div>
 
-                <p>
-                    <label htmlFor="bonusScale">Bonus Scale</label>
-                    <input
-                        type="number"
-                        onChange={(e) => setBonusScale(Number(e.target.value))}
-                        id='bonusScale'
-                        step="0.1"
-                        min="0"
-                        max="1"
-                    />
-                </p>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="bonusScale" className={styles.label}>Bonus Scale</label>
+                        <input
+                            type="number"
+                            onChange={(e) => setBonusScale(Number(e.target.value))}
+                            id='bonusScale'
+                            step="0.1"
+                            min="0"
+                            max="1"
+                            value={bonusScale}
+                            className={styles.input}
+                        />
+                    </div>
+                </div>
 
-                <button type='submit'>Зберегти статичні параметри</button>
+                <button type='submit' className={styles.submitButton}>Зберегти статичні параметри</button>
             </form>
         </section>
     );

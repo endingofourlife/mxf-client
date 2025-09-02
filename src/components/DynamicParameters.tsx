@@ -1,6 +1,7 @@
 import type {Premises} from "../interfaces/Premises.ts";
 import {useEffect, useState} from "react";
 import type {DynamicParametersConfig} from "../interfaces/DynamicParametersConfig.ts";
+import styles from "./DynamicParameters.module.css";
 
 interface DynamicParametersProps {
     premises: Premises[];
@@ -73,55 +74,78 @@ function DynamicParameters({premises, currentConfig, onConfigChange}: DynamicPar
     }
 
     const totalWeight = Object.values(config.weights).reduce((sum, weight) => sum + weight, 0);
+    const availableFields = getAvailableFields();
+
+    if (availableFields.length === 0){
+        return (
+            <section className={styles.section}>
+                <h3>Оберіть поля для аналізу</h3>
+                <p>Немає доступних полів для аналізу. Спочатку завантажте дані специфікації.</p>
+            </section>
+        );
+    }
 
     return (
-        <section>
-            <h3>Оберіть поля для аналізу</h3>
+        <section className={styles.section}>
+            <h4>Оберіть поля для аналізу</h4>
 
             {currentConfig && (
-                <details>
-                    <summary>Поточні динамічні параметри</summary>
+                <details className={styles.currentConfig}>
+                    <summary>Поточні динамічні параметри ↓</summary>
                     <pre>{JSON.stringify(currentConfig, null, 2)}</pre>
                 </details>
             )}
 
-            {getAvailableFields().map(field => (
-                <label key={field}>
-                    <input
-                        type="checkbox"
-                        checked={config.importantFields[field]}
-                        onChange={() => handleFieldToggle(field)}
-                        id={`${field}_box`}
-                    />
-                    {field}
-                </label>
-            ))}
+            <div className={styles.fieldsGrid}>
+                {availableFields.map(field => (
+                    <label key={field} className={styles.fieldLabel}>
+                        <input
+                            type="checkbox"
+                            checked={config.importantFields[field]}
+                            onChange={() => handleFieldToggle(field)}
+                            id={`${field}_box`}
+                        />
+                        <span>{field}</span>
+                    </label>
+                ))}
+            </div>
 
             {selectedFields.length > 0 && (
-                <section>
-                    <h4>Ваги полів</h4>
-                    <p>Загальна вага: {(totalWeight * 100).toFixed(1)}%</p>
+                <div className={styles.weightsSection}>
+                    <h4>Налаштування ваг полів</h4>
+                    <div className={styles.totalWeight}>
+                        Загальна вага: {(totalWeight * 100).toFixed(1)}%
+                    </div>
 
-                    {selectedFields.map(field => (
-                        <div key={field}>
-                            <label htmlFor={`${field}_slider`}>
-                                {field}
-                            </label>
-                            <input
-                                id={`${field}_slider`}
-                                type="range"
-                                min="0"
-                                max="100"
-                                step="1"
-                                value={(config.weights[field] * 100) || 0}
-                                onChange={(e) => handleWeightChange(field, Number(e.target.value) / 100)}
-                            />
-                            <p>
-                                {((config.weights[field] || 0) * 100).toFixed(1)}%
-                            </p>
-                        </div>
-                    ))}
-                </section>
+                    <div className={styles.weightsGrid}>
+                        {selectedFields.map(field => (
+                            <div key={field} className={styles.weightItem}>
+                                <div className={styles.weightHeader}>
+                                    <span className={styles.weightFieldName}>{field}</span>
+                                    <span className={styles.weightValue}>
+                                        {((config.weights[field] || 0) * 100).toFixed(1)}%
+                                    </span>
+                                </div>
+
+                                <div className={styles.sliderContainer}>
+                                    <input
+                                        id={`${field}_slider`}
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        step="1"
+                                        value={((config.weights[field] || 0) * 100)}
+                                        onChange={(e) => handleWeightChange(field, Number(e.target.value) / 100)}
+                                        className={styles.slider}
+                                    />
+                                    <span className={styles.sliderPercentage}>
+                                        {((config.weights[field] || 0) * 100).toFixed(0)}%
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             )}
         </section>
     );

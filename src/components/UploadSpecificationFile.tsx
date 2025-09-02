@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import PreviewSpecificationData from './PreviewSpecificationData';
 import type {RealEstateObjectData} from "../interfaces/RealEstateObjectData.ts";
 import type {ChangeEvent} from "react";
+import styles from './UploadSpecificationFile.module.css';
 
 interface UploadSpecificationFileProps {
     isPreview: boolean;
@@ -106,22 +107,32 @@ function UploadSpecificationFile({
     };
 
     return (
-        <section>
-            <h2>Upload Specification</h2>
-            <p>
-                <label htmlFor="specification_file">Select a file</label>
+        <section className={styles.section}>
+            <h2>Завантаження специфікації</h2>
+
+            <div className={styles.uploadArea}>
                 <input
                     type="file"
                     accept=".xlsx,.xls"
                     id="specification_file"
                     onChange={handleFileChange}
+                    className={styles.fileInput}
                 />
-            </p>
-            {isPreview ? (
-                <button onClick={() => setIsPreview(false)}>Приховати завантажені дані</button>
-            ) : (
-                <button onClick={() => setIsPreview(true)}>Показати завантажені дані</button>
-            )}
+                <label htmlFor="specification_file" className={styles.fileLabel}>
+                    Обрати файл Excel
+                </label>
+                <p className={styles.fileInfo}>
+                    Підтримуються файли формату .xlsx та .xls
+                </p>
+            </div>
+
+            <button
+                onClick={() => setIsPreview(!isPreview)}
+                className={styles.toggleButton}
+            >
+                {isPreview ? 'Приховати завантажені дані' : 'Показати завантажені дані'}
+            </button>
+
             {isPreview && <PreviewSpecificationData data={previewSpecData} />}
         </section>
     );
