@@ -1,0 +1,74 @@
+import React from 'react';
+
+interface DistributionDynamicParamsProps {
+    functionName: string;
+}
+
+interface ParamDetails {
+    default: number;
+    min: number;
+    max: number;
+}
+
+interface DistributionFunction {
+    func: string;
+    params: Record<string, ParamDetails>;
+}
+
+function DistributionDynamicParams({ functionName }: DistributionDynamicParamsProps) {
+    const distributionFunctions: Record<string, DistributionFunction> = {
+        uniform: {
+            func: "uniform",
+            params: {}
+        },
+        gaussian: {
+            func: "gaussian",
+            params: {
+                mean: { default: 50, min: 0, max: 100 },
+                stdDev: { default: 16.67, min: 0.01, max: 50 }
+            }
+        },
+        bimodal: {
+            func: "bimodal",
+            params: {
+                mean1: { default: 33.33, min: 0, max: 100 },
+                mean2: { default: 66.67, min: 0, max: 100 },
+                stdDev: { default: 10, min: 0.01, max: 50 }
+            }
+        }
+    };
+
+    const functionKey = functionName.toLowerCase();
+    const selectedFunction = distributionFunctions[functionKey];
+
+    if (!selectedFunction) {
+        return <p>Виберіть функцію дистрибуції.</p>;
+    }
+
+    if (Object.keys(selectedFunction.params).length === 0) {
+        return <p>Функція {functionName} не має параметрів для налаштування.</p>;
+    }
+
+    return (
+        <>
+            {Object.entries(selectedFunction.params).map(([paramName, paramDetails]) => (
+                <p key={paramName}>
+                    <label htmlFor={paramName}>
+                        {paramName}:
+                    </label>
+                    <input
+                        type="number"
+                        id={paramName}
+                        name={paramName}
+                        defaultValue={paramDetails.default}
+                        min={paramDetails.min}
+                        max={paramDetails.max}
+                        step="0.01"
+                    />
+                </p>
+            ))}
+        </>
+    );
+}
+
+export default DistributionDynamicParams;
