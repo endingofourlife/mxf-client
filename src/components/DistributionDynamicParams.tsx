@@ -19,7 +19,10 @@ function DistributionDynamicParams({ functionName }: DistributionDynamicParamsPr
     const distributionFunctions: Record<string, DistributionFunction> = {
         uniform: {
             func: "uniform",
-            params: {}
+            params: {
+                k: { default: 1, min: 0, max: 10000000 },
+                b: { default: 1, min: 0, max: 10000000 },
+            }
         },
         gaussian: {
             func: "gaussian",

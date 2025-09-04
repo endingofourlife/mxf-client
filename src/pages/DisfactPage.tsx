@@ -4,7 +4,6 @@ import type {DistributionConfig} from "../interfaces/DistributionConfig.ts";
 import {fetchDistributionConfigs} from "../api/DistributionConfigApi.ts";
 
 function DisfactPage() {
-    const [presetName, setPresetName] = useState<string>("");
     const [distributeConfig, setDistributeConfig] = useState<DistributionConfig[]>([]);
 
     useEffect(() => {
@@ -17,9 +16,24 @@ function DisfactPage() {
 
     return (
         <main>
-            <h1>Сторінка Disafact: Налаштування дистрибуції</h1>
+            <h1>Сторінка Disfact: Налаштування дистрибуції</h1>
 
-            <CreateDistributionPresetForm setPresetName={setPresetName}/>
+            <section>
+                <h2>Збережні дистрибуції</h2>
+                {distributeConfig.length === 0 ? (
+                    <p>Немає збережених дистрибуцій.</p>
+                ) : (
+                    <ul>
+                        {distributeConfig.map((config) => (
+                            <li key={config.id}>
+                                <strong>{config.func_name}</strong> - ID: {config.id} - Content: {JSON.stringify(config.content)}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </section>
+
+            <CreateDistributionPresetForm setDistributeConfig={setDistributeConfig}/>
 
         </main>
     );

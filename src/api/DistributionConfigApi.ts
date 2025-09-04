@@ -1,15 +1,11 @@
 import {api} from "./BaseApi.ts";
 import type {DistributionConfig} from "../interfaces/DistributionConfig.ts";
 
-interface CreateDistributionConfigRequest{
-    func_name: string;
-    content: Record<string, unknown>;
-}
 
-export async function createDistributionConfig(config: CreateDistributionConfigRequest){
+export async function createDistributionConfig(func_name: string, content: Record<string, number|string>){
     const {data} = await api.post("/distribution-configs/", {
-        func_name: config.func_name,
-        content: config.content
+        func_name: func_name,
+        content: content
     });
     return data;
 }
