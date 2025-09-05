@@ -4,6 +4,7 @@ import type {StaticParametersConfig} from "../interfaces/StaticParameters.ts";
 import { scoring } from "../core/scoring.ts";
 import type {ColumnPriorities} from "./PremisesParameters.tsx";
 import styles from "./ChessboardTable.module.css";
+import { useEffect, useMemo } from "react";
 
 interface ChessboardTableProps {
     premises: Premises[];
@@ -11,11 +12,27 @@ interface ChessboardTableProps {
     dynamicConfig: DynamicParametersConfig;
     staticConfig: StaticParametersConfig;
     ranging: ColumnPriorities;
+    setScoringData: (data: Record<number, number | string>) => void;
 }
 
-function ChessboardTable({ premises, selectedMetric, staticConfig, dynamicConfig, ranging }: ChessboardTableProps) {
-    // const [bonusDisplay, setBonusDisplay] = useState<boolean>(false);
-    // const [presetIndex, setPresetIndex] = useState<number>(0);
+function ChessboardTable({ premises, selectedMetric, staticConfig, dynamicConfig, ranging, setScoringData }: ChessboardTableProps) {
+    const scoringData = useMemo(() => {
+        return premises.reduce((acc, item) => {
+            const score = scoring(
+                item,
+                premises.filter(flat => flat.id !== item.id),
+                dynamicConfig,
+                staticConfig,
+                ranging
+            );
+            return { ...acc, [item.id]: score };
+        }, {} as Record<number, number>);
+    }, [premises, dynamicConfig, staticConfig, ranging]);
+
+    // Передаем scoringData в родительский компонент
+    useEffect(() => {
+        setScoringData(scoringData);
+    }, [scoringData, setScoringData]);
 
     const floors = [...new Set(premises.map((item) => item.floor))].sort((a, b) => a - b);
     const units = [...new Set(premises.map((item) => item.number_of_unit))].sort((a, b) => a - b);
@@ -27,28 +44,24 @@ function ChessboardTable({ premises, selectedMetric, staticConfig, dynamicConfig
         if (selectedMetric === "Unit Number") {
             return item.number;
         } else if (selectedMetric === "Scoring") {
-            const data = scoring(
-                item,
-                premises.filter(flat => flat.id !== item.id),
-                dynamicConfig,
-                staticConfig,
-                ranging
-            );
-            console.log(data);
-            return data;
+            return scoringData[item.id] ?? "N/A";
         } else if (selectedMetric === "presetValue") {
-            // TODO ??? - на основі скорінг
+            // TODO: Логіка для presetValue на основе scoringData
+            return "N/A";
         } else if (selectedMetric === "actualPricePerSQM") {
-            // TODO ????
             return item.price_per_meter;
         } else if (selectedMetric === "normContributeRT") {
-            // TODO ????
+            // TODO: Логіка
+            return "N/A";
         } else if (selectedMetric === "conditionalValue") {
-            // TODO ????
+            // TODO: Логіка
+            return "N/A";
         } else if (selectedMetric === "conditionalCost") {
-            // TODO ????
+            // TODO: Логіка
+            return "N/A";
         } else if (selectedMetric === "transformRate") {
-            // TODO ????
+            // TODO: Логіка
+            return "N/A";
         } else {
             return "N/A";
         }

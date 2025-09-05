@@ -1,12 +1,20 @@
 import {useNavigate, useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
+import {act, useEffect, useState} from "react";
 import {fetchRealEstateObject} from "../api/RealEstateObjectApi.ts";
 import EngineHeader from "../components/EngineHeader.tsx";
 import EnginePriceCalculator from "../components/EnginePriceCalculator.tsx";
 import ChessboardTable from "../components/ChessboardTable.tsx";
-import SelectViewFromDataFrame from "../components/SelectViewFromDataFrame.tsx";
+import ShowCalculationProcessTable from "../components/ShowCalculationProcessTable.tsx";
 import {useActiveRealEstateObject} from "../contexts/ActiveRealEstateObjectContext.tsx";
 import styles from "./EnginePage.module.css";
+import {fetchDistributionConfigs} from "../api/DistributionConfigApi.ts";
+import type {DistributionConfig} from "../interfaces/DistributionConfig.ts";
+
+export interface CalculationProcessData {
+    onBoardingSpread: number;
+    compensationRate: number;
+    conditionalValue: number;
+}
 
 function EnginePage() {
     const { id } = useParams();
@@ -14,6 +22,11 @@ function EnginePage() {
     const [selectedEngine, setSelectedEngine] = useState("Regular");
     const [selectedMetric, setSelectedMetric] = useState("Unit Number");
     const [selectedView, setSelectedView] = useState("basic-metrics");
+    const [scoringData, setScoringData] = useState<Record<number, number | string>>({});
+    const [calculationProcessData, setCalculationProcessData] = useState<CalculationProcessData | null>(null);
+    const [distribConfig, setDistribConfig] = useState<DistributionConfig[]>([]);
+    const [activeConfig, setActiveConfig] = useState<number | null>(null);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -29,11 +42,26 @@ function EnginePage() {
                 setIsLoading(false);
             }
         }
+
+        async function getDistribConfig(){
+            try {
+                const response = await fetchDistributionConfigs();
+                setDistribConfig(response);
+            } catch (error) {
+                console.error("Error fetching distribution configs:", error);
+                alert('Не вдалося завантажити конфігурації розподілу.');
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
         if (activeObject && activeObject.id === Number(id)){
             setIsLoading(false);
             return;
         }
         fetchData();
+        getDistribConfig();
+
     }, [activeObject, id, setActiveObject, setIsLoading]);
 
     function handleBackBtn(){
@@ -63,11 +91,14 @@ function EnginePage() {
                 setSelectedEngine={setSelectedEngine}
                 selectedMetric={selectedMetric}
                 setSelectedMetric={setSelectedMetric}
+                configs={distribConfig}
+                setActiveConfig={setActiveConfig}
             />
 
             <EnginePriceCalculator
                 selectedEngine={selectedEngine}
                 realObject={activeObject}
+                setCalculationProcessData={setCalculationProcessData}
             />
 
             <section className={styles.section}>
@@ -78,12 +109,19 @@ function EnginePage() {
                     dynamicConfig={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.dynamicConfig}
                     staticConfig={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.staticConfig}
                     ranging={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.ranging}
+                    setScoringData={setScoringData}
                 />
             </section>
 
             <section className={styles.section}>
-                <h2>Вибір подання даних</h2>
-                <SelectViewFromDataFrame onViewChange={setSelectedView} />
+                <ShowCalculationProcessTable
+                    premises={activeObject.premises}
+                    scoringData={scoringData}
+                    calculationProcessData={calculationProcessData}
+                    ranging={activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.ranging}
+                    distribConfigs={distribConfig}
+                    activeConfigId={activeConfig}
+                />
             </section>
         </main>
     );

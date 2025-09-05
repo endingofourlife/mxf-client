@@ -18,6 +18,8 @@ function DisfactPage() {
         <main>
             <h1>Сторінка Disfact: Налаштування дистрибуції</h1>
 
+            <CreateDistributionPresetForm setDistributeConfig={setDistributeConfig}/>
+
             <section>
                 <h2>Збережні дистрибуції</h2>
                 {distributeConfig.length === 0 ? (
@@ -32,8 +34,6 @@ function DisfactPage() {
                     </ul>
                 )}
             </section>
-
-            <CreateDistributionPresetForm setDistributeConfig={setDistributeConfig}/>
 
         </main>
     );
