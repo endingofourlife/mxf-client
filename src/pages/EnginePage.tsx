@@ -1,5 +1,5 @@
 import {useNavigate, useParams} from "react-router-dom";
-import {act, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {fetchRealEstateObject} from "../api/RealEstateObjectApi.ts";
 import EngineHeader from "../components/EngineHeader.tsx";
 import EnginePriceCalculator from "../components/EnginePriceCalculator.tsx";
@@ -21,7 +21,7 @@ function EnginePage() {
     const {activeObject, setActiveObject, isLoading, setIsLoading} = useActiveRealEstateObject();
     const [selectedEngine, setSelectedEngine] = useState("Regular");
     const [selectedMetric, setSelectedMetric] = useState("Unit Number");
-    const [selectedView, setSelectedView] = useState("basic-metrics");
+    //const [selectedView, setSelectedView] = useState("basic-metrics");
     const [scoringData, setScoringData] = useState<Record<number, number | string>>({});
     const [calculationProcessData, setCalculationProcessData] = useState<CalculationProcessData | null>(null);
     const [distribConfig, setDistribConfig] = useState<DistributionConfig[]>([]);
@@ -54,21 +54,15 @@ function EnginePage() {
                 setIsLoading(false);
             }
         }
-
-        if (activeObject && activeObject.id === Number(id)){
-            setIsLoading(false);
-            return;
-        }
         fetchData();
         getDistribConfig();
-
-    }, [activeObject, id, setActiveObject, setIsLoading]);
+    }, [id, setActiveObject, setIsLoading]);
 
     function handleBackBtn(){
         navigate(-1);
     }
 
-    if (!activeObject || isLoading) {
+    if (!activeObject || isLoading || distribConfig.length === 0 || activeObject.pricing_configs.length === 0) {
         return <div className={styles.loading}>Завантаження...</div>;
     }
 
@@ -100,7 +94,6 @@ function EnginePage() {
                 realObject={activeObject}
                 setCalculationProcessData={setCalculationProcessData}
             />
-
             <section className={styles.section}>
                 <h2>Шахівниця цін</h2>
                 <ChessboardTable
@@ -114,13 +107,10 @@ function EnginePage() {
             </section>
 
             <section className={styles.section}>
+                <h1>Ця частина сторінки і результати з'являються при рендері сторінки. Нічого робити не потрібно. Для простоти береться останній збережений конфіг.</h1>
                 <ShowCalculationProcessTable
-                    premises={activeObject.premises}
-                    scoringData={scoringData}
-                    calculationProcessData={calculationProcessData}
-                    ranging={activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.ranging}
-                    distribConfigs={distribConfig}
-                    activeConfigId={activeConfig}
+                    activeConfig={distribConfig[distribConfig.length-1]}
+                    activeObject={activeObject}
                 />
             </section>
         </main>

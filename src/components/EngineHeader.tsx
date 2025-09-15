@@ -48,7 +48,7 @@ function EngineHeader({
                 <label className={styles.label}>
                     Config
                     {configs.map(item => (
-                        <div key={item.id}>
+                        <div key={item.id} className={styles.radioGroup}>
                             <input
                                 type="radio"
                                 id={`config-${item.id}`}

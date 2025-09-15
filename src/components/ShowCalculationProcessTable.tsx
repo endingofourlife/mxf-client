@@ -1,126 +1,116 @@
-import type { Premises } from "../interfaces/Premises.ts";
-import type { CalculationProcessData } from "../pages/EnginePage.tsx";
-import type { ColumnPriorities } from "./PremisesParameters.tsx";
-import type { DistributionConfig } from "../interfaces/DistributionConfig.ts";
+import type {DistributionConfig} from "../interfaces/DistributionConfig.ts";
+import type {RealEstateObject} from "../interfaces/RealEstateObject.ts";
+import {calculateNormalizedRanks} from "../formulas/calcNormalizedRanks.ts";
+import {calculateNormalizedScoring} from "../formulas/calcNormalScoring.ts";
+import {calculatePresetValues} from "../formulas/calcPresetValues.ts";
+import {calculateMixedScoring} from "../formulas/calcMixedScoring.ts";
+import {calculateScope} from "../formulas/calcScope.ts";
+import {calculateFitSpreadRate} from "../formulas/calcFitSpreadRate.ts";
+import {calculateConditionalCosts} from "../formulas/calcConditionalCosts.ts";
+import {calculateNormalizedRunningTotal} from "../formulas/calcNormalizedRunningTotal.ts";
+import {calculateActualCosts} from "../formulas/calcActualCosts.ts";
+import {calculateRunningTotalMixedScoring} from "../formulas/calcRunningTotalMixedScoring.ts";
+import {calculateBasePrice} from "../formulas/calcBasePrice.ts";
+import {calculateMinMaxRate} from "../formulas/calcMinMaxRate.ts";
+import {calculateMinMaxPrice} from "../formulas/calcMinMaxPrice.ts";
+import {calculateSpread} from "../formulas/calcSpread.ts";
+import {filterAndScoreFlats} from "../core/filterAndScoreFlats.ts";
+import {calculateFinalPrice} from "../formulas/calcFinalPrice.ts";
+import {calculateFitCondValues} from "../formulas/calcFitCondValues.ts";
 
 interface SelectViewFromDataFrameProps {
-    premises: Premises[];
-    scoringData: Record<number, number | string>;
-    calculationProcessData: CalculationProcessData;
-    ranging: ColumnPriorities;
-    distribConfigs?: DistributionConfig[];
-    activeConfigId?: number | null;
+    activeConfig: DistributionConfig;
+    activeObject?: RealEstateObject
 }
 
-function ShowCalculationProcessTable({
-                                         premises,
-                                         scoringData,
-                                         calculationProcessData,
-                                         ranging,
-                                         distribConfigs,
-                                         activeConfigId,
-                                     }: SelectViewFromDataFrameProps) {
-    // Get the active distribution config
-    function getActiveConfig() {
-        console.log(`Retrieving active configuration with activeConfigId: ${activeConfigId}`);
-        if (!distribConfigs || !activeConfigId) {
-            console.log('No distribution configs or activeConfigId provided, returning null');
-            return null;
-        }
-        const config = distribConfigs.find((config) => config.id === activeConfigId) || null;
-        console.log(`Active config found: ${config ? JSON.stringify(config, null, 2) : 'None'}`);
-        return config;
-    }
+function ShowCalculationProcessTable({activeConfig, activeObject,}: SelectViewFromDataFrameProps) {
+    // step 1
+    const pricePerSQM = activeObject.income_plans[activeObject.income_plans.length-1].price_per_sqm;
+    const basePrice = calculateBasePrice(pricePerSQM);
 
-    // Calculate conditional cost
-    function getConditionalCosts(premise: Premises) {
-        return (premise.total_area_m2 * (calculationProcessData?.conditionalValue || 1)).toFixed(2);
-    }
+    const minRefPrice = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig.minimum_liq_refusal_price;
+    const maxRefPrice = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig.maximum_liq_refusal_price;
+    const {minLiqRate, maxLiqRate} = calculateMinMaxRate(minRefPrice, maxRefPrice);
 
-    // Preset distribution functions
-    const uniformPreset = (length: number) => {
-        return Array.from({ length }, (_, i) => (i + 1) / length);
-    };
+    const {minPrice, maxPrice} = calculateMinMaxPrice(basePrice, minLiqRate, maxLiqRate);
 
-    const gaussianPreset = (length: number, params: { mean?: number; stdDev?: number }) => {
-        const mean = params.mean || 0.5;
-        const stdDev = params.stdDev || 1 / 6;
-        return Array.from({ length }, (_, i) => {
-            const x = (i + 1) / length;
-            const z = (x - mean) / stdDev;
-            return Math.exp(-0.5 * z * z);
-        });
-    };
+    // step 2
+    const spread = calculateSpread(maxLiqRate, minLiqRate);
 
-    const bimodalPreset = (length: number, params: { mean1?: number; mean2?: number; stdDev?: number }) => {
-        const mean1 = params.mean1 || 1 / 3;
-        const mean2 = params.mean2 || 2 / 3;
-        const stdDev = params.stdDev || 1 / 10;
-        return Array.from({ length }, (_, i) => {
-            const x = (i + 1) / length;
-            const z1 = (x - mean1) / stdDev;
-            const z2 = (x - mean2) / stdDev;
-            return Math.exp(-0.5 * z1 * z1) + Math.exp(-0.5 * z2 * z2);
-        });
-    };
+    // step 3
+    const flatsWithScores = filterAndScoreFlats(activeObject.premises, activeObject);
 
-    // Map function types to preset functions
-    const presetFunctions: Record<string, (length: number, params: any) => number[]> = {
-        Uniform: uniformPreset,
-        Gaussian: gaussianPreset,
-        Bimodal: bimodalPreset,
-    };
+    // step 4
+    const rankNorm = calculateNormalizedRanks(flatsWithScores.length);
 
-    // Compute preset values using maxRank
-    const computePresetValues = () => {
-        const maxRank = premises.length;
-        const activeConfig = getActiveConfig();
-        const functionType = activeConfig?.content?.function_type || "Uniform";
-        const params = activeConfig?.content || {};
-        const presetFunc = presetFunctions[functionType] || uniformPreset;
+    // step 5
+    const scoreNorm = calculateNormalizedScoring(flatsWithScores);
 
-        // Generate normalized ranks
-        const normRanks = uniformPreset(maxRank); // [1/maxRank, 2/maxRank, ..., 1]
-        const rawPresetValues = presetFunc(maxRank, params);
+    // step 6 TODO: check may be exception here
+    const presetValues = calculatePresetValues(flatsWithScores.length, activeConfig, rankNorm);
 
-        // Map normalized ranks to preset values
-        return normRanks.map((normRank) => {
-            const index = Math.floor((normRank - (1 / maxRank)) * (maxRank - 1));
-            return rawPresetValues[index] || rawPresetValues[rawPresetValues.length - 1];
-        });
-    };
+    // step 7
+    const spMixed = calculateMixedScoring(scoreNorm, presetValues);
 
-    // Sort premises by scoring and assign preset values
-    const sortedPremises = [...premises]
-        .map((premise, index) => ({
-            ...premise,
-            scoring: parseFloat(String(scoringData[premise.id])) || 0,
-            originalIndex: index,
-        }))
-        .sort((a, b) => a.scoring - b.scoring);
+    // step 8
+    const spMixedRt = calculateRunningTotalMixedScoring(spMixed);
 
-    const presetValues = computePresetValues();
+    // step 9
+    const spMixedRtNorm = calculateNormalizedRunningTotal(spMixedRt);
 
-    // Map premises to include preset values
-    const premisesWithPreset = sortedPremises.map((premise, index) => ({
-        ...premise,
-        presetValue: presetValues[index] || 0,
-    }));
+    // step 10
+    const spMixedRtNormScope = calculateScope(spMixedRtNorm);
 
-    // Re-sort back to original order for display
-    const displayPremises = premisesWithPreset.sort((a, b) => a.originalIndex - b.originalIndex);
+    // step 11 TODO: потрібен один чи массив????? далі використовується як один
+    const fitSpreadRate = calculateFitSpreadRate(spMixedRtNormScope, spread);
+    console.log(fitSpreadRate);
+
+    // step 12
+    const { conditionalCosts, totalCondCost, premCondCostShr } = calculateConditionalCosts(flatsWithScores, spMixedRtNorm, fitSpreadRate);
+
+    // step 13
+    const currentPricePerSQM = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig.current_price_per_sqm;
+
+    // step 14
+    const actualCosts = calculateActualCosts(flatsWithScores, currentPricePerSQM, premCondCostShr);
+
+    // step 15
+    const actualPricePerSQM = actualCosts.map((cost, i) => {
+        const area = flatsWithScores[i].flat.total_area_m2 || 1e-10;
+        const result = (cost.actualCost * premCondCostShr[i]) / area;
+        return area === 0 ? "N/A" : result;
+    });
+
+    // step 16
+    const fitCondValues = calculateFitCondValues(spMixedRtNorm, fitSpreadRate);
+
+    // TODO: change hardcoded value
+    const engine = "Regular";
+    const staticConfig = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig;
+    const finalPrices = calculateFinalPrice(basePrice, fitCondValues, engine, staticConfig, minPrice, maxPrice);
 
     return (
         <section>
             <h2>Процес розрахунків</h2>
 
-
-
-
             <h2>
                 Вибраний конфіг
-                <pre>{JSON.stringify(getActiveConfig(), null, 2)}</pre>
+                <pre>{JSON.stringify(activeConfig, null, 2)}</pre>
             </h2>
+
+            <h3>Розрахункові параметри:</h3>
+            <ul>
+                <li>Spread (OnBoarding Spread): {spread.toFixed(4)}</li>
+                <li>Fit Spread Rate: {fitSpreadRate.toFixed(4) ?? "N/A"}</li>
+                <li>Scope: {spMixedRtNormScope.toFixed(4)}</li>
+                <li>Base Price: {basePrice.toFixed(2)}</li>
+                <li>Min Price: {minPrice.toFixed(2)}</li>
+                <li>Max Price: {maxPrice.toFixed(2)}</li>
+                <li>Min Liq Rate: {minLiqRate.toFixed(4)}</li>
+                <li>Max Liq Rate: {maxLiqRate.toFixed(4)}</li>
+                <li>Total Conditional Cost: {totalCondCost.toFixed(2)}</li>
+                <li>Current Price Per SQM: {currentPricePerSQM.toFixed(2)}</li>
+            </ul>
 
             <table>
                 <thead>
@@ -128,40 +118,50 @@ function ShowCalculationProcessTable({
                     <th>Premises ID</th>
                     <th>Number</th>
                     <th>Status</th>
-                    <th>Estimated Area m2</th>
+                    <th>Estimated Area m²</th>
                     <th>Floor</th>
-                    <th>Number of unit</th>
+                    <th>Number of Units</th>
                     <th>Scoring</th>
+                    <th>Normalized Scoring</th>
+                    <th>Normalized Rank</th>
                     <th>Preset Value</th>
-                    <th>OnBoarding Spread</th>
-                    <th>Compensation Rate</th>
-                    <th>Conditional Value</th>
+                    <th>Mixed Scoring</th>
+                    <th>Running Total Mixed</th>
+                    <th>Normalized Running Total</th>
+                    <th>Fit Conditional Value</th>
                     <th>Conditional Cost</th>
-                    <th>Total Conditional Cost</th>
-                    <th>Total Actual Cost</th>
-                    <th>Transform Rate</th>
-                    <th>Actual price per SQM</th>
+                    <th>Cost Share</th>
+                    <th>Actual Cost</th>
+                    <th>Actual Price per SQM</th>
+                    <th>Final Price</th>
                 </tr>
                 </thead>
                 <tbody>
-                {displayPremises.map((premise) => (
-                    <tr key={premise.id}>
-                        <td>{premise.premises_id}</td>
-                        <td>{premise.number}</td>
-                        <td>{premise.status}</td>
-                        <td>{premise.estimated_area_m2}</td>
-                        <td>{premise.floor}</td>
-                        <td>{premise.number_of_unit}</td>
-                        <td>{premise.scoring === 0 ? "N/A" : premise.scoring.toFixed(2)}</td>
-                        <td>{premise.presetValue.toFixed(4)}</td>
-                        <td>{calculationProcessData?.onBoardingSpread?.toFixed(4) ?? "N/A"}</td>
-                        <td>{calculationProcessData?.compensationRate?.toFixed(4) ?? "N/A"}</td>
-                        <td>{calculationProcessData?.conditionalValue?.toFixed(4) ?? "N/A"}</td>
-                        <td>{getConditionalCosts(premise)}</td>
-                        <td>{"N/A"}</td> {/* Placeholder for Total Conditional Cost */}
-                        <td>{"N/A"}</td> {/* Placeholder for Total Actual Cost */}
-                        <td>{"N/A"}</td> {/* Placeholder for Transform Rate */}
-                        <td>{premise.price_per_meter}</td>
+                {flatsWithScores.map((premise, i) => (
+                    <tr key={`${premise.flat.premises_id}-${i}`}>
+                        <td>{premise.flat.premises_id}</td>
+                        <td>{premise.flat.number ?? "N/A"}</td>
+                        <td>{premise.flat.status ?? "N/A"}</td>
+                        <td>{premise.flat.total_area_m2?.toFixed(2) ?? "N/A"}</td>
+                        <td>{premise.flat.floor ?? "N/A"}</td>
+                        <td>{premise.flat.number_of_unit ?? "N/A"}</td>
+                        <td>{premise.scoring === 0 ? "N/A" : premise.scoring?.toFixed(4) ?? "N/A"}</td>
+                        <td>{scoreNorm[i]?.toFixed(4) ?? "N/A"}</td>
+                        <td>{rankNorm[i]?.toFixed(4) ?? "N/A"}</td>
+                        <td>{presetValues[i]?.toFixed(4) ?? "N/A"}</td>
+                        <td>{spMixed[i]?.toFixed(4) ?? "N/A"}</td>
+                        <td>{spMixedRt[i]?.toFixed(4) ?? "N/A"}</td>
+                        <td>{spMixedRtNorm[i]?.toFixed(4) ?? "N/A"}</td>
+                        <td>{fitCondValues[i]?.toFixed(4) ?? "N/A"}</td>
+                        <td>{conditionalCosts[i]?.cond_cost?.toFixed(2) ?? "N/A"}</td>
+                        <td>{premCondCostShr[i]?.toFixed(4) ?? "N/A"}</td>
+                        <td>{actualCosts[i]?.actualCost?.toFixed(2) ?? "N/A"}</td>
+                        <td>
+                            {typeof actualPricePerSQM[i] === "number"
+                                ? actualPricePerSQM[i].toFixed(2)
+                                : actualPricePerSQM[i] ?? "N/A"}
+                        </td>
+                        <td>{finalPrices[i]?.toFixed(2) ?? "N/A"}</td>
                     </tr>
                 ))}
                 </tbody>

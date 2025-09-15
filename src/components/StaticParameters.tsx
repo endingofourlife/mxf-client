@@ -258,7 +258,7 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
                         />
                     </div>
                 </div>
-
+                <p>Після збереження статичних параметрів потрібно ще "зберегти конфігурацію"</p>
                 <button type='submit' className={styles.submitButton}>Зберегти статичні параметри</button>
             </form>
         </section>

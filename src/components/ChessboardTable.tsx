@@ -29,7 +29,6 @@ function ChessboardTable({ premises, selectedMetric, staticConfig, dynamicConfig
         }, {} as Record<number, number>);
     }, [premises, dynamicConfig, staticConfig, ranging]);
 
-    // Передаем scoringData в родительский компонент
     useEffect(() => {
         setScoringData(scoringData);
     }, [scoringData, setScoringData]);
