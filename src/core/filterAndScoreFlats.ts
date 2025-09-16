@@ -2,6 +2,7 @@ import type { Premises } from "../interfaces/Premises.ts";
 import type { RealEstateObject } from "../interfaces/RealEstateObject.ts";
 import type {ScoredFlat} from "../interfaces/ScoredFlat.ts";
 import {scoring} from "./scoring.ts";
+import type {PricingConfig} from "../interfaces/PricingConfig.ts";
 
 /**
  * Filters available flats, calculates their scoring and area, and sorts by scoring.
@@ -10,19 +11,20 @@ import {scoring} from "./scoring.ts";
 export function filterAndScoreFlats(
     premises?: Premises[],
     realObject?: RealEstateObject,
+    pricing?: PricingConfig
 ): ScoredFlat [] {
     // Check for valid input
     if (!premises || !Array.isArray(premises) || premises.length === 0) {
         console.error("Invalid input: premises is undefined, not an array, or empty");
         return [];
     }
-    if (!realObject || !realObject.pricing_configs || !Array.isArray(realObject.pricing_configs) || realObject.pricing_configs.length === 0) {
+    if (!realObject || !pricing.content) {
         console.error("Invalid input: realObject or pricing_configs is undefined or empty");
         return [];
     }
 
     // Get the latest pricing configuration
-    const config = realObject.pricing_configs[realObject.pricing_configs.length - 1].content;
+    const config = pricing.content;
     if (!config || !config.dynamicConfig || !config.staticConfig || !config.ranging) {
         console.error("Invalid input: pricing config is incomplete");
         return [];
@@ -68,7 +70,7 @@ export function filterAndScoreFlats(
                     config.staticConfig,
                     config.ranging
                 );
-                scoringValue = typeof scoringRaw === "string" ? parseFloat(scoringRaw) : scoringRaw;
+                scoringValue = parseFloat(scoringRaw);
                 if (isNaN(scoringValue) || scoringValue === undefined) {
                     console.error(`Invalid scoring for flat ${flat.number}: scoring is not a number, using 0`);
                     scoringValue = 0;

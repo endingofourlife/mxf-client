@@ -1,14 +1,16 @@
-import {useNavigate, useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
-import {fetchRealEstateObject} from "../api/RealEstateObjectApi.ts";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { fetchRealEstateObject } from "../api/RealEstateObjectApi.ts";
 import EngineHeader from "../components/EngineHeader.tsx";
 import EnginePriceCalculator from "../components/EnginePriceCalculator.tsx";
 import ChessboardTable from "../components/ChessboardTable.tsx";
 import ShowCalculationProcessTable from "../components/ShowCalculationProcessTable.tsx";
-import {useActiveRealEstateObject} from "../contexts/ActiveRealEstateObjectContext.tsx";
+import { useActiveRealEstateObject } from "../contexts/ActiveRealEstateObjectContext.tsx";
 import styles from "./EnginePage.module.css";
-import {fetchDistributionConfigs} from "../api/DistributionConfigApi.ts";
-import type {DistributionConfig} from "../interfaces/DistributionConfig.ts";
+import { fetchDistributionConfigs } from "../api/DistributionConfigApi.ts";
+import type { DistributionConfig } from "../interfaces/DistributionConfig.ts";
+import { fetchPricingConfig } from "../api/PricingConfigApi.ts";
+import type { PricingConfig } from "../interfaces/PricingConfig.ts";
 
 export interface CalculationProcessData {
     onBoardingSpread: number;
@@ -18,56 +20,62 @@ export interface CalculationProcessData {
 
 function EnginePage() {
     const { id } = useParams();
-    const {activeObject, setActiveObject, isLoading, setIsLoading} = useActiveRealEstateObject();
+    const { activeObject, setActiveObject, isLoading, setIsLoading } = useActiveRealEstateObject();
     const [selectedEngine, setSelectedEngine] = useState("Regular");
     const [selectedMetric, setSelectedMetric] = useState("Unit Number");
-    //const [selectedView, setSelectedView] = useState("basic-metrics");
     const [scoringData, setScoringData] = useState<Record<number, number | string>>({});
     const [calculationProcessData, setCalculationProcessData] = useState<CalculationProcessData | null>(null);
     const [distribConfigs, setDistribConfigs] = useState<DistributionConfig[]>([]);
-    const [activeConfig, setActiveConfig] = useState<DistributionConfig>(null);
+    const [activeConfig, setActiveConfig] = useState<DistributionConfig | null>(null);
+    const [pricingConfig, setPricingConfig] = useState<PricingConfig | null>(null);
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        async function fetchData(){
+        async function fetchData() {
             try {
                 const response = await fetchRealEstateObject(Number(id));
                 console.log(response);
                 setActiveObject(response);
             } catch (error) {
                 console.error("Error fetching real estate object:", error);
-                alert('Не вдалося завантажити дані об\'єкта.');
-            } finally {
-                setIsLoading(false);
+                alert("Не вдалося завантажити дані об'єкта.");
             }
         }
 
-        async function getDistribConfig(){
+        async function getDistribConfig() {
             try {
                 const response = await fetchDistributionConfigs();
-                setActiveConfig(response[response.length-1] || null);
+                setActiveConfig(response[response.length - 1] || null);
                 setDistribConfigs(response);
             } catch (error) {
                 console.error("Error fetching distribution configs:", error);
-                alert('Не вдалося завантажити конфігурації розподілу.');
-            } finally {
-                setIsLoading(false);
+                alert("Не вдалося завантажити конфігурації розподілу.");
             }
         }
-        fetchData();
-        getDistribConfig();
+
+        async function getPricingConfig() {
+            try {
+                const response = await fetchPricingConfig(Number(id));
+                setPricingConfig(response);
+            } catch (error) {
+                console.error("Error fetching pricing config:", error);
+                alert("Не вдалося завантажити pricing конфігурацію.");
+            }
+        }
+
+        setIsLoading(true);
+        Promise.all([fetchData(), getDistribConfig(), getPricingConfig()]).finally(() => {
+            setIsLoading(false);
+        });
     }, [id, setActiveObject, setIsLoading]);
 
-    function handleBackBtn(){
+    function handleBackBtn() {
         navigate(-1);
     }
 
-    if (!activeObject || isLoading || activeObject.pricing_configs.length === 0) {
+    if (!activeObject || isLoading || !activeConfig || distribConfigs.length === 0 || !pricingConfig || !pricingConfig.content) {
         return <div className={styles.loading}>Завантаження...</div>;
-    }
-    if (distribConfigs.length === 0){
-        return <div className={styles.loading}>Distrib config пустий. Створи щось на disfact</div>;
     }
 
     return (
@@ -103,9 +111,9 @@ function EnginePage() {
                 <ChessboardTable
                     selectedMetric={selectedMetric}
                     premises={activeObject.premises}
-                    dynamicConfig={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.dynamicConfig}
-                    staticConfig={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.staticConfig}
-                    ranging={activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.ranging}
+                    dynamicConfig={pricingConfig.content.dynamicConfig}
+                    staticConfig={pricingConfig.content.staticConfig}
+                    ranging={pricingConfig.content.ranging}
                     setScoringData={setScoringData}
                 />
             </section>
@@ -115,6 +123,7 @@ function EnginePage() {
                 <ShowCalculationProcessTable
                     activeConfig={activeConfig}
                     activeObject={activeObject}
+                    pricingConfig={pricingConfig}
                 />
             </section>
         </main>

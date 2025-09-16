@@ -17,19 +17,21 @@ import {calculateSpread} from "../formulas/calcSpread.ts";
 import {filterAndScoreFlats} from "../core/filterAndScoreFlats.ts";
 import {calculateFinalPrice} from "../formulas/calcFinalPrice.ts";
 import {calculateFitCondValues} from "../formulas/calcFitCondValues.ts";
+import type {PricingConfig} from "../interfaces/PricingConfig.ts";
 
 interface SelectViewFromDataFrameProps {
     activeConfig: DistributionConfig;
-    activeObject?: RealEstateObject
+    activeObject?: RealEstateObject;
+    pricingConfig: PricingConfig;
 }
 
-function ShowCalculationProcessTable({activeConfig, activeObject,}: SelectViewFromDataFrameProps) {
+function ShowCalculationProcessTable({activeConfig, activeObject, pricingConfig}: SelectViewFromDataFrameProps) {
     // step 1
     const pricePerSQM = activeObject.income_plans[activeObject.income_plans.length-1].price_per_sqm;
     const basePrice = calculateBasePrice(pricePerSQM);
 
-    const minRefPrice = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig.minimum_liq_refusal_price;
-    const maxRefPrice = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig.maximum_liq_refusal_price;
+    const minRefPrice = pricingConfig.content.staticConfig.minimum_liq_refusal_price;
+    const maxRefPrice = pricingConfig.content.staticConfig.maximum_liq_refusal_price;
     const {minLiqRate, maxLiqRate} = calculateMinMaxRate(minRefPrice, maxRefPrice);
 
     const {minPrice, maxPrice} = calculateMinMaxPrice(basePrice, minLiqRate, maxLiqRate);
@@ -38,7 +40,7 @@ function ShowCalculationProcessTable({activeConfig, activeObject,}: SelectViewFr
     const spread = calculateSpread(maxLiqRate, minLiqRate);
 
     // step 3
-    const flatsWithScores = filterAndScoreFlats(activeObject.premises, activeObject);
+    const flatsWithScores = filterAndScoreFlats(activeObject.premises, activeObject, pricingConfig);
 
     // step 4
     const rankNorm = calculateNormalizedRanks(flatsWithScores.length);
@@ -61,7 +63,7 @@ function ShowCalculationProcessTable({activeConfig, activeObject,}: SelectViewFr
     // step 10
     const spMixedRtNormScope = calculateScope(spMixedRtNorm);
 
-    // step 11 TODO: потрібен один чи массив????? далі використовується як один
+    // step 11
     const fitSpreadRate = calculateFitSpreadRate(spMixedRtNormScope, spread);
     console.log(fitSpreadRate);
 
@@ -86,8 +88,7 @@ function ShowCalculationProcessTable({activeConfig, activeObject,}: SelectViewFr
 
     // TODO: change hardcoded value
     const engine = "Regular";
-    const staticConfig = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig;
-    const finalPrices = calculateFinalPrice(basePrice, fitCondValues, engine, staticConfig, minPrice, maxPrice);
+    const finalPrices = calculateFinalPrice(basePrice, fitCondValues, engine, pricingConfig.content.staticConfig, minPrice, maxPrice);
 
     return (
         <section>
@@ -96,6 +97,11 @@ function ShowCalculationProcessTable({activeConfig, activeObject,}: SelectViewFr
             <h2>
                 Вибраний конфіг
                 <pre>{JSON.stringify(activeConfig, null, 2)}</pre>
+            </h2>
+
+            <h2>
+                Вибраний прайсінг конфіг
+                <pre>{JSON.stringify(pricingConfig, null, 2)}</pre>
             </h2>
 
             <h3>Розрахункові параметри:</h3>
