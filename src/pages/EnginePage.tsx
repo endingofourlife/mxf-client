@@ -24,8 +24,8 @@ function EnginePage() {
     //const [selectedView, setSelectedView] = useState("basic-metrics");
     const [scoringData, setScoringData] = useState<Record<number, number | string>>({});
     const [calculationProcessData, setCalculationProcessData] = useState<CalculationProcessData | null>(null);
-    const [distribConfig, setDistribConfig] = useState<DistributionConfig[]>([]);
-    const [activeConfig, setActiveConfig] = useState<number | null>(null);
+    const [distribConfigs, setDistribConfigs] = useState<DistributionConfig[]>([]);
+    const [activeConfig, setActiveConfig] = useState<DistributionConfig>(null);
 
     const navigate = useNavigate();
 
@@ -46,7 +46,8 @@ function EnginePage() {
         async function getDistribConfig(){
             try {
                 const response = await fetchDistributionConfigs();
-                setDistribConfig(response);
+                setActiveConfig(response[response.length-1] || null);
+                setDistribConfigs(response);
             } catch (error) {
                 console.error("Error fetching distribution configs:", error);
                 alert('Не вдалося завантажити конфігурації розподілу.');
@@ -62,8 +63,11 @@ function EnginePage() {
         navigate(-1);
     }
 
-    if (!activeObject || isLoading || distribConfig.length === 0 || activeObject.pricing_configs.length === 0) {
+    if (!activeObject || isLoading || activeObject.pricing_configs.length === 0) {
         return <div className={styles.loading}>Завантаження...</div>;
+    }
+    if (distribConfigs.length === 0){
+        return <div className={styles.loading}>Distrib config пустий. Створи щось на disfact</div>;
     }
 
     return (
@@ -85,7 +89,7 @@ function EnginePage() {
                 setSelectedEngine={setSelectedEngine}
                 selectedMetric={selectedMetric}
                 setSelectedMetric={setSelectedMetric}
-                configs={distribConfig}
+                configs={distribConfigs}
                 setActiveConfig={setActiveConfig}
             />
 
@@ -109,7 +113,7 @@ function EnginePage() {
             <section className={styles.section}>
                 <h1>Ця частина сторінки і результати з'являються при рендері сторінки. Нічого робити не потрібно. Для простоти береться останній збережений конфіг.</h1>
                 <ShowCalculationProcessTable
-                    activeConfig={distribConfig[distribConfig.length-1]}
+                    activeConfig={activeConfig}
                     activeObject={activeObject}
                 />
             </section>

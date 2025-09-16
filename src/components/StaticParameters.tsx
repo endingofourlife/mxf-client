@@ -88,7 +88,7 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
             bonusScale
         }
         setStaticConfig(newConfig);
-        alert('Статичні параметри збережено!');
+        alert('Статичні параметри локально збережено!');
     }
 
     return (
@@ -258,7 +258,7 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
                         />
                     </div>
                 </div>
-                <p>Після збереження статичних параметрів потрібно ще "зберегти конфігурацію"</p>
+                <strong style={{textAlign: 'center', color: 'red'}}>Спочатку "зберегти статичні параметри", після - "зберегти конфігурацію"</strong>
                 <button type='submit' className={styles.submitButton}>Зберегти статичні параметри</button>
             </form>
         </section>

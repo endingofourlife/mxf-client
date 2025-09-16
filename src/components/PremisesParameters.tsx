@@ -35,13 +35,11 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
         }
     });
 
-    // Фільтруємо колонки - прибираємо customcontent і додаємо його ключі
-    // Але перевіряємо, щоб не було дублікатів
+    // ФИКС: Правильно фільтруємо колонки - тільки вибрані користувачем
     const columnNames = [
-        ...Object.keys(selectedColumns)
-            .filter(key => selectedColumns[key] && key !== 'customcontent'),
-        ...Array.from(customContentKeys).filter(key => !selectedColumns[key])
-    ];
+        ...Object.keys(selectedColumns).filter(key => selectedColumns[key]),
+        ...Array.from(customContentKeys).filter(key => selectedColumns[key])
+    ].filter((value, index, self) => self.indexOf(value) === index); // Убираем дубликаты
 
     // Получаем уникальные значения для выбранной колонки
     const getUniqueValues = (column: string) => {
@@ -72,20 +70,6 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
             allUnique = Array.from(valuesSet);
         }
 
-        // Если для этой колонки еще нет приоритетов, создаем начальные
-        if (!priorities[column]) {
-            const initPriorities = allUnique.map((value, index) => ({
-                name: value,
-                values: [value],
-                priority: index + 1,
-            }));
-            const newPriorities = {
-                ...priorities,
-                [column]: initPriorities,
-            };
-            setPriorities(newPriorities);
-        }
-
         setUniqueValues(allUnique.sort());
         setSelectedColumn(column);
         setSelectedValues([]);
@@ -114,8 +98,8 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
         };
 
         // Удаляем отдельные элементы, которые теперь в группе
-        const updatedColumnPriorities = priorities[selectedColumn]
-            .filter(item => !selectedValues.includes(item.name))
+        const updatedColumnPriorities = (priorities[selectedColumn] || [])
+            .filter(item => !selectedValues.some(val => item.values.includes(val)))
             .concat(newGroup)
             .sort((a, b) => a.priority - b.priority);
 
@@ -168,7 +152,7 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
             const individualItems: PriorityItem[] = deletedItem.values.map((value, index) => ({
                 name: value,
                 values: [value],
-                priority: priorities[column].length + index, // временный приоритет
+                priority: (priorities[column]?.length || 0) + index, // временный приоритет
             }));
 
             const updatedColumnPriorities = priorities[column]
@@ -204,6 +188,46 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
         }
     };
 
+    // Функция для инициализации приоритетов только для выбранных колонок
+    const initializePrioritiesForColumn = (column: string) => {
+        if (priorities[column]) return; // Уже инициализированы
+
+        let allUnique: string[] = [];
+
+        if (customContentKeys.has(column)) {
+            const valuesSet = new Set<string>();
+            premises.forEach(p => {
+                if (p.customcontent && p.customcontent[column] !== undefined) {
+                    const value = p.customcontent[column];
+                    if (value !== null && value !== undefined) {
+                        valuesSet.add(String(value));
+                    }
+                }
+            });
+            allUnique = Array.from(valuesSet);
+        } else {
+            const valuesSet = new Set(
+                premises
+                    .map(p => p[column as keyof Premises])
+                    .filter((val): val is string | number | boolean => val != null)
+                    .map(val => String(val))
+            );
+            allUnique = Array.from(valuesSet);
+        }
+
+        const initPriorities = allUnique.map((value, index) => ({
+            name: value,
+            values: [value],
+            priority: index + 1,
+        }));
+
+        const newPriorities = {
+            ...priorities,
+            [column]: initPriorities,
+        };
+        setPriorities(newPriorities);
+    };
+
     if (columnNames.length === 0) {
         return (
             <div className={styles.emptyState}>
@@ -226,14 +250,17 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
                     <div
                         key={name}
                         className={`${styles.columnItem} ${selectedColumn === name ? styles.selected : ''}`}
-                        onClick={() => getUniqueValues(name)}
+                        onClick={() => {
+                            getUniqueValues(name);
+                            initializePrioritiesForColumn(name);
+                        }}
                     >
                         {name}
                     </div>
                 ))}
             </div>
 
-            {selectedColumn && (
+            {selectedColumn && priorities[selectedColumn] && (
                 <>
                     <div className={styles.valuesSection}>
                         <h3>Унікальні значення для {selectedColumn}</h3>
@@ -272,7 +299,7 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
                                     />
                                 </div>
                                 <button
-                                    onClick={createGroup}
+                                    onClick={() => createGroup()}
                                     disabled={!newGroupName}
                                     className={styles.createButton}
                                 >

@@ -1,4 +1,4 @@
-import {BrowserRouter, Route, Routes} from "react-router-dom";
+import {HashRouter, Route, Routes} from "react-router-dom";
 import MainPage from "./pages/MainPage.tsx";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 import ConfigurePage from "./pages/ConfigurePage.tsx";
@@ -11,7 +11,7 @@ function App() {
 
   return (
       <div className={styles.globalContainer}>
-        <BrowserRouter>
+        <HashRouter>
             <ActiveRealEstateObjectProvider>
                 <Routes>
                     <Route path={"/"} element={<MainPage />}/>
@@ -21,7 +21,7 @@ function App() {
                     <Route path={'/disfact/'} element={<DisfactPage />} />
                 </Routes>
             </ActiveRealEstateObjectProvider>
-        </BrowserRouter>
+        </HashRouter>
       </div>
   )
 }

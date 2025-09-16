@@ -41,7 +41,6 @@ function ConfigurePage() {
                 setPricingConfig(response);
             } catch (error) {
                 console.error("Error fetching pricing config:", error);
-                // alert('Не вдалося завантажити конфігурацію ціноутворення.');
             } finally {
                 setIsLoading(false);
             }
@@ -51,10 +50,8 @@ function ConfigurePage() {
                 setIsLoading(false);
                 return;
             }
-            console.log('Using existing activeObject pricing config');
-            setStaticConfig(activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.staticConfig);
-            setDynamicConfig(activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.dynamicConfig);
-            setPriorities(activeObject.pricing_configs[activeObject.pricing_configs.length - 1].content.ranging || {});
+            console.log('Active object already set. Fetching pricing config only.');
+            getPricingConfig();
             setIsLoading(false);
             return;
         }
@@ -67,8 +64,7 @@ function ConfigurePage() {
     }
 
     function checkIsEngineReady(): boolean {
-        if (!dynamicConfig || !staticConfig) return false;
-        return true;
+        return !(!dynamicConfig || !staticConfig);
     }
 
     function handleGoToEngine(){

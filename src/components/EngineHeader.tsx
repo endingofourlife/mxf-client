@@ -9,7 +9,7 @@ interface EngineHeaderProps {
     selectedMetric: string;
     setSelectedMetric: (metric: string) => void;
     configs?: DistributionConfig[];
-    setActiveConfig: (configId: number) => void;
+    setActiveConfig: (config: DistributionConfig) => void;
 }
 
 function EngineHeader({
@@ -54,7 +54,7 @@ function EngineHeader({
                                 id={`config-${item.id}`}
                                 name="distributionConfig"
                                 value={item.id}
-                                onChange={() => setActiveConfig(item.id)}
+                                onChange={() => setActiveConfig(item)}
                             />
                             <label htmlFor={`config-${item.id}`} className={styles.radioLabel}>
                                 {item.func_name}
