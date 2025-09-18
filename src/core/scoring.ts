@@ -22,20 +22,30 @@ export function scoring(
     staticConfig: StaticParametersConfig,
     ranging: ColumnPriorities
 ): string {
-    if (!specData || !Array.isArray(specData) || specData.length === 0) return "0.0000";
+    console.log('Working with flat: ', unitData);
+
+    if (!specData || !Array.isArray(specData) || specData.length === 0) {
+        console.log('Returning 0.0000 due to empty specData');
+        return "0.0000";
+    }
 
     const selectedFields = Object.keys(dynamicConfig.importantFields).filter(
         (f) => dynamicConfig.importantFields[f]
     );
-    if (selectedFields.length === 0) return "0.0000";
+    if (selectedFields.length === 0) {
+        console.log('Returning 0.0000 due to no selected important fields');
+        return "0.0000";
+    }
 
     const scoringFields: FieldConfig[] = selectedFields.map((field) => ({
         field,
         weight: dynamicConfig.weights[field] || 0,
         priorities: ranging[field] || []
     }));
+    console.log('Scoring fields:', scoringFields);
 
     const weights = scoringFields.map((field) => parseFloat(field.weight.toString()) || 0);
+    console.log('Weights:', weights);
 
     const getRankForField = (flat: Premises, fieldConfig: FieldConfig): number => {
         const fieldName = fieldConfig.field;
@@ -67,6 +77,7 @@ export function scoring(
     const maxRanks = scoringFields.map((fieldConfig) =>
         Math.max(...(fieldConfig.priorities?.map(p => p.priority) || [1]), 1)
     );
+    console.log('Max ranks:', maxRanks);
 
     const soldFlats: SoldFlat[] = specData
         .filter((flat) => flat.status === "sold")
@@ -76,8 +87,13 @@ export function scoring(
             soldScore: 1.0,
         }));
 
+    console.log('Sold flats:', soldFlats);
+
     const targetRanks = scoringFields.map((fieldConfig) => getRankForField(unitData, fieldConfig));
+    console.log('Target ranks:', targetRanks);
+
     const targetFlat = { features: targetRanks };
+    console.log('Target flat features:', targetFlat.features);
 
     if (soldFlats.length === 0) {
         const inverseRanks = targetRanks.map((rank, i) => maxRanks[i] - rank + 1);
@@ -85,34 +101,44 @@ export function scoring(
         return rawScore.toFixed(4);
     }
 
+    // Нормалізуємо ваги
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    const normalizedWeights = weights.map(w => w / totalWeight);
+
     let totalScore = 0;
-    let totalWeight = 0;
-    const similarityThreshold = staticConfig.similarityThreshold || 0.1;
-    const sigma = staticConfig.sigma || 1.0;
-    const maxBonus = staticConfig.maxBonus || 1.0;
-    const bonusFactor = staticConfig.bonusFactor || 0.2;
+    let totalSimilarity = 0;
+    const similarityThreshold = staticConfig.similarityThreshold;
+    const sigma = staticConfig.sigma;
+    const maxBonus = staticConfig.maxBonus;
+    const bonusFactor = staticConfig.bonusFactor;
+
+    console.log('Similarity threshold:', similarityThreshold);
+    console.log('Sigma:', sigma);
+    console.log('Max bonus:', maxBonus);
+    console.log('Bonus factor:', bonusFactor);
 
     soldFlats.forEach((soldFlat) => {
-        const distanceSquared = soldFlat.features.reduce((acc, val, i) => {
-            const diff = targetFlat.features[i] - val;
-            return acc + weights[i] * diff * diff;
-        }, 0);
+        // Обчислюємо нормалізовану відстань з урахуванням ваг
+        let weightedDistance = 0;
+        soldFlat.features.forEach((rank, i) => {
+            const diff = Math.abs(targetFlat.features[i] - rank);
+            const normalizedDiff = diff / maxRanks[i]; // Нормалізуємо різницю
+            weightedDistance += normalizedWeights[i] * normalizedDiff;
+        });
 
-        const similarity = Math.exp(-distanceSquared / (2 * sigma * sigma));
+        // Гаусівська функція подібності
+        const similarity = Math.exp(-weightedDistance * weightedDistance / (2 * sigma * sigma));
+
         if (similarity > similarityThreshold) {
-            let bonus = 0;
-            const maxDiff = Math.max(...maxRanks);
-            soldFlat.features.forEach((rank, i) => {
-                const diff = Math.abs(targetFlat.features[i] - rank);
-                bonus += maxBonus * (1 - (diff / maxDiff) * bonusFactor);
-            });
-            bonus = bonus / soldFlat.features.length;
+            // Розраховуємо бонус на основі подібності
+            const bonus = maxBonus * (1 - weightedDistance) * bonusFactor;
 
             totalScore += similarity * (1 + bonus);
-            totalWeight += similarity;
+            totalSimilarity += similarity;
         }
     });
 
-    const finalScore = totalWeight > 0 ? totalScore / totalWeight : 0;
+    const finalScore = totalSimilarity > 0 ? totalScore / totalSimilarity : 0;
+    console.log('Final score:', finalScore);
     return finalScore.toFixed(4);
 }
