@@ -72,9 +72,9 @@ function MainPage() {
 
     return (
         <div className={styles.globalContainer}>
-            <button onClick={() => navigate('/disfact')}>
-                Перейти на DisfactPage
-            </button>
+            {/*<button onClick={() => navigate('/disfact')}>*/}
+            {/*    Перейти на DisfactPage*/}
+            {/*</button>*/}
             <main className={styles.mainContainer}>
                 <h1 className={styles.pageTitle}>Мої об'єкти</h1>
 

@@ -7,7 +7,7 @@ import ChessboardTable from "../components/ChessboardTable.tsx";
 import ShowCalculationProcessTable from "../components/ShowCalculationProcessTable.tsx";
 import { useActiveRealEstateObject } from "../contexts/ActiveRealEstateObjectContext.tsx";
 import styles from "./EnginePage.module.css";
-import { fetchDistributionConfigs } from "../api/DistributionConfigApi.ts";
+import {fetchDistributionConfig} from "../api/DistributionConfigApi.ts";
 import type { DistributionConfig } from "../interfaces/DistributionConfig.ts";
 import { fetchPricingConfig } from "../api/PricingConfigApi.ts";
 import type { PricingConfig } from "../interfaces/PricingConfig.ts";
@@ -25,12 +25,12 @@ function EnginePage() {
     const [selectedMetric, setSelectedMetric] = useState("Unit Number");
     const [scoringData, setScoringData] = useState<Record<number, number | string>>({});
     const [calculationProcessData, setCalculationProcessData] = useState<CalculationProcessData | null>(null);
-    const [distribConfigs, setDistribConfigs] = useState<DistributionConfig[]>([]);
     const [activeConfig, setActiveConfig] = useState<DistributionConfig | null>(null);
     const [pricingConfig, setPricingConfig] = useState<PricingConfig | null>(null);
 
     const navigate = useNavigate();
 
+    // Fetch real estate object and pricing config
     useEffect(() => {
         async function fetchData() {
             try {
@@ -40,17 +40,6 @@ function EnginePage() {
             } catch (error) {
                 console.error("Error fetching real estate object:", error);
                 alert("Не вдалося завантажити дані об'єкта.");
-            }
-        }
-
-        async function getDistribConfig() {
-            try {
-                const response = await fetchDistributionConfigs();
-                setActiveConfig(response[response.length - 1] || null);
-                setDistribConfigs(response);
-            } catch (error) {
-                console.error("Error fetching distribution configs:", error);
-                alert("Не вдалося завантажити конфігурації розподілу.");
             }
         }
 
@@ -65,16 +54,40 @@ function EnginePage() {
         }
 
         setIsLoading(true);
-        Promise.all([fetchData(), getDistribConfig(), getPricingConfig()]).finally(() => {
+        Promise.all([fetchData(), getPricingConfig()]).finally(() => {
             setIsLoading(false);
         });
     }, [id, setActiveObject, setIsLoading]);
+
+    // Fetch distribution config once pricingConfig is available
+    useEffect(() => {
+        async function getDistributionConfig() {
+            if (!pricingConfig?.content?.staticConfig?.distribConfigId) {
+                console.warn("Distribution Config ID is missing.");
+                alert("Distribution Config ID відсутній.");
+                return;
+            }
+            try {
+                const response = await fetchDistributionConfig(
+                    pricingConfig.content.staticConfig.distribConfigId
+                );
+                setActiveConfig(response);
+            } catch (error) {
+                console.error("Error fetching distribution config:", error);
+                alert("Не вдалося завантажити distribution конфігурацію.");
+            }
+        }
+
+        if (pricingConfig) {
+            getDistributionConfig();
+        }
+    }, [pricingConfig]);
 
     function handleBackBtn() {
         navigate(-1);
     }
 
-    if (!activeObject || isLoading || !activeConfig || distribConfigs.length === 0 || !pricingConfig || !pricingConfig.content) {
+    if (!activeObject || isLoading || !pricingConfig || !pricingConfig.content || !activeConfig) {
         return <div className={styles.loading}>Завантаження...</div>;
     }
 
@@ -97,8 +110,6 @@ function EnginePage() {
                 setSelectedEngine={setSelectedEngine}
                 selectedMetric={selectedMetric}
                 setSelectedMetric={setSelectedMetric}
-                configs={distribConfigs}
-                setActiveConfig={setActiveConfig}
             />
 
             <EnginePriceCalculator

@@ -27,15 +27,15 @@ function DistributionDynamicParams({ functionName }: DistributionDynamicParamsPr
         gaussian: {
             func: "gaussian",
             params: {
-                mean: { default: 50, min: 0, max: 100 },
-                stdDev: { default: 16.67, min: 0.01, max: 50 }
+                mean: { default: 0.50, min: 0, max: 1 },
+                stdDev: { default: 20.00, min: 0.01, max: 50 }
             }
         },
         bimodal: {
             func: "bimodal",
             params: {
-                mean1: { default: 33.33, min: 0, max: 100 },
-                mean2: { default: 66.67, min: 0, max: 100 },
+                mean1: { default: 0.33, min: 0, max: 1 },
+                mean2: { default: 0.67, min: 0, max: 1 },
                 stdDev: { default: 10, min: 0.01, max: 50 }
             }
         }

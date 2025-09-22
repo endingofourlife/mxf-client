@@ -238,7 +238,7 @@ function PremisesParameters({ premises, selectedColumns, priorities, setPrioriti
 
     return (
         <section className={styles.section}>
-            <h2>Налаштування пріоритетів параметрів</h2>
+            <h2>Налаштування пріоритетів</h2>
 
             <details className={styles.details}>
                 <summary className={styles.summary}>Збережені значення:</summary>

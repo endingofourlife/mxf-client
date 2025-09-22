@@ -96,49 +96,66 @@ export function scoring(
     console.log('Target flat features:', targetFlat.features);
 
     if (soldFlats.length === 0) {
+        // Обчислення інвертованих рангів
         const inverseRanks = targetRanks.map((rank, i) => maxRanks[i] - rank + 1);
-        const rawScore = inverseRanks.reduce((sum, rank, i) => sum + rank * weights[i], 0);
+        console.log('Inverse ranks:', inverseRanks);
+
+        // Нормалізація інвертованих рангів
+        const normalizedInverseRanks = inverseRanks.map((inverseRank, i) =>
+            maxRanks[i] === 0 ? 0 : inverseRank / maxRanks[i]
+        );
+        console.log('Normalized inverse ranks:', normalizedInverseRanks);
+
+        // Обчислення скорингу з нормалізованих інвертованих рангів
+        const rawScore = normalizedInverseRanks.reduce((sum, normRank, i) => sum + normRank * weights[i], 0);
+        console.log('Raw score (no sold flats):', rawScore);
+
         return rawScore.toFixed(4);
     }
 
-    // Нормалізуємо ваги
-    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-    const normalizedWeights = weights.map(w => w / totalWeight);
+    // --- НОВА ЛОГІКА ---
+    // 1. Для кожного фактора окремо рахуємо similarity з усіма sold
+    // 2. Нормалізуємо внески
+    // 3. Після нормалізації застосовуємо ваги
 
-    let totalScore = 0;
-    let totalSimilarity = 0;
-    const similarityThreshold = staticConfig.similarityThreshold;
-    const sigma = staticConfig.sigma;
-    const maxBonus = staticConfig.maxBonus;
-    const bonusFactor = staticConfig.bonusFactor;
-
-    console.log('Similarity threshold:', similarityThreshold);
-    console.log('Sigma:', sigma);
-    console.log('Max bonus:', maxBonus);
-    console.log('Bonus factor:', bonusFactor);
+    const factorSimilarities: number[] = new Array(scoringFields.length).fill(0);
 
     soldFlats.forEach((soldFlat) => {
-        // Обчислюємо нормалізовану відстань з урахуванням ваг
-        let weightedDistance = 0;
-        soldFlat.features.forEach((rank, i) => {
-            const diff = Math.abs(targetFlat.features[i] - rank);
-            const normalizedDiff = diff / maxRanks[i]; // Нормалізуємо різницю
-            weightedDistance += normalizedWeights[i] * normalizedDiff;
+        scoringFields.forEach((fieldConfig, i) => {
+            const diff = Math.abs(targetFlat.features[i] - soldFlat.features[i]);
+            const normalizedDiff = diff / maxRanks[i];
+
+            // Подібність для фактора (гаусівська)
+            const similarity = Math.exp(-normalizedDiff * normalizedDiff / (2 * staticConfig.sigma * staticConfig.sigma));
+
+            if (similarity > staticConfig.similarityThreshold) {
+                factorSimilarities[i] += similarity;
+            }
         });
-
-        // Гаусівська функція подібності
-        const similarity = Math.exp(-weightedDistance * weightedDistance / (2 * sigma * sigma));
-
-        if (similarity > similarityThreshold) {
-            // Розраховуємо бонус на основі подібності
-            const bonus = maxBonus * (1 - weightedDistance) * bonusFactor;
-
-            totalScore += similarity * (1 + bonus);
-            totalSimilarity += similarity;
-        }
     });
 
-    const finalScore = totalSimilarity > 0 ? totalScore / totalSimilarity : 0;
+    console.log('Factor similarities before normalization:', factorSimilarities);
+
+    // нормалізація кожного фактора
+    const normalizedSimilarities = factorSimilarities.map((s) =>
+        s > 0 ? s / Math.max(...factorSimilarities) : 0
+    );
+
+    console.log('Normalized similarities:', normalizedSimilarities);
+
+    // ваги після нормалізації
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    const normalizedWeights = weights.map((w) => (totalWeight > 0 ? w / totalWeight : 0));
+
+    console.log('Normalized weights:', normalizedWeights);
+
+    // фінальний скоринг
+    const finalScore = normalizedSimilarities.reduce(
+        (sum, sim, i) => sum + sim * normalizedWeights[i],
+        0
+    );
+
     console.log('Final score:', finalScore);
-    return finalScore.toFixed(4);
+
+    return finalScore.toFixed(6);
 }

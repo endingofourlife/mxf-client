@@ -1,6 +1,5 @@
 import type { ChangeEvent } from "react";
 import styles from "./EngineHeader.module.css";
-import type {DistributionConfig} from "../interfaces/DistributionConfig.ts";
 
 interface EngineHeaderProps {
     objectName: string;
@@ -8,8 +7,6 @@ interface EngineHeaderProps {
     setSelectedEngine: (engine: string) => void;
     selectedMetric: string;
     setSelectedMetric: (metric: string) => void;
-    configs?: DistributionConfig[];
-    setActiveConfig: (config: DistributionConfig) => void;
 }
 
 function EngineHeader({
@@ -18,8 +15,6 @@ function EngineHeader({
                           setSelectedEngine,
                           selectedMetric,
                           setSelectedMetric,
-                          configs,
-                          setActiveConfig,
                       }: EngineHeaderProps) {
     const handleEngineChange = (e: ChangeEvent<HTMLSelectElement>) => {
         setSelectedEngine(e.target.value);
@@ -31,7 +26,7 @@ function EngineHeader({
 
     return (
         <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>{objectName || "Без назви"}</h2>
+            <h2 className={styles.sectionTitle}>Назва: {objectName || "Без назви"}</h2>
             <div className={styles.selectorsContainer}>
                 <label className={styles.label}>
                     Движок:
@@ -44,25 +39,6 @@ function EngineHeader({
                         <option value="Oh, Elon">Oh, Elon</option>
                     </select>
                 </label>
-
-                <label className={styles.label}>
-                    Config
-                    {configs.map(item => (
-                        <div key={item.id} className={styles.radioGroup}>
-                            <input
-                                type="radio"
-                                id={`config-${item.id}`}
-                                name="distributionConfig"
-                                value={item.id}
-                                onChange={() => setActiveConfig(item)}
-                            />
-                            <label htmlFor={`config-${item.id}`} className={styles.radioLabel}>
-                                {item.func_name}
-                            </label>
-                        </div>
-                    ))}
-                </label>
-
                 <label className={styles.label}>
                     Метрика:
                     <select

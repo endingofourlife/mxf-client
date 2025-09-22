@@ -85,7 +85,7 @@ function ChessboardTable({ premises, selectedMetric, staticConfig, dynamicConfig
                 <table className={styles.chessboardTable}>
                     <thead>
                     <tr>
-                        <th className={styles.cornerHeader}>Поверх/Квартира</th>
+                        <th className={styles.cornerHeader}>Поверх / Unit</th>
                         {units.map((item) => (
                             <th key={item} className={styles.unitHeader}>
                                 №{item}

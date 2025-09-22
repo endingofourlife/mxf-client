@@ -8,7 +8,8 @@ export interface StaticParametersConfig {
     oversold_method: "pieces" | "area";
     sigma: number;
     similarityThreshold: number;
-    maxBonus: number;
-    bonusFactor: number;
-    bonusScale: number;
+    // maxBonus: number;
+    // bonusFactor: number;
+    // bonusScale: number;
+    distribConfigId: number;
 }

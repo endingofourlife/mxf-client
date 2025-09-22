@@ -4,15 +4,17 @@ import {calculateOnboardingPrice} from "../core/pricingConfiguration.ts";
 import type {IncomePlan} from "../interfaces/IncomePlan.ts";
 import type {Premises} from "../interfaces/Premises.ts";
 import styles from "./StaticParameters.module.css";
+import type {DistributionConfig} from "../interfaces/DistributionConfig.ts";
 
 interface StaticParametersProps {
     currentConfig: StaticParametersConfig | null;
     setStaticConfig: (config: StaticParametersConfig) => void;
     incomePlans: IncomePlan[];
     premises: Premises[];
+    distribConfigs: DistributionConfig[];
 }
 
-function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premises }: StaticParametersProps) {
+function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premises, distribConfigs }: StaticParametersProps) {
     const [bargainGap, setBargainGap] = useState(0);
     const [maxify_factor, setMaxifyFactor] = useState(0);
     const [current_price_per_sqm, setCurrentPricePerSqm] = useState(0);
@@ -22,9 +24,10 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
     const [oversold_method, setOversoldMethod] = useState("pieces");
     const [sigma, setSigma] = useState(0);
     const [similarityThreshold, setSimilarityThreshold] = useState(0);
-    const [maxBonus, setMaxBonus] = useState(0);
-    const [bonusFactor, setBonusFactor] = useState(0);
-    const [bonusScale, setBonusScale] = useState(0);
+    // const [maxBonus, setMaxBonus] = useState(0);
+    // const [bonusFactor, setBonusFactor] = useState(0);
+    // const [bonusScale, setBonusScale] = useState(0);
+    const [activeConfigId, setActiveConfigId] = useState<number | null>(null);
 
     useEffect(() => {
         if (currentConfig) {
@@ -37,11 +40,15 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
             setOversoldMethod(currentConfig.oversold_method);
             setSigma(currentConfig.sigma);
             setSimilarityThreshold(currentConfig.similarityThreshold);
-            setMaxBonus(currentConfig.maxBonus);
-            setBonusFactor(currentConfig.bonusFactor);
-            setBonusScale(currentConfig.bonusScale);
+            // setMaxBonus(currentConfig.maxBonus);
+            // setBonusFactor(currentConfig.bonusFactor);
+            // setBonusScale(currentConfig.bonusScale);
+            setActiveConfigId(currentConfig.distribConfigId ?? distribConfigs[0]?.id ?? null);
+        } else if (distribConfigs.length > 0) {
+            // Set default distribConfigId if no currentConfig but distribConfigs are available
+            setActiveConfigId(distribConfigs[0].id);
         }
-    }, [currentConfig]);
+    }, [currentConfig, distribConfigs]);
 
 
     // TODO FIX CALCULATIONS
@@ -83,9 +90,10 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
             oversold_method: oversold_method as "pieces" | "area",
             sigma,
             similarityThreshold,
-            maxBonus,
-            bonusFactor,
-            bonusScale
+            // maxBonus,
+            // bonusFactor,
+            // bonusScale,
+            distribConfigId: activeConfigId
         }
         setStaticConfig(newConfig);
         alert('Статичні параметри локально збережено!');
@@ -94,7 +102,6 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
     return (
         <section className={styles.section}>
             <h2 className={styles.title}>Статичні параметри</h2>
-
             {currentConfig && (
                 <details className={styles.details}>
                     <summary className={styles.summary}>Поточні статичні параметри</summary>
@@ -217,45 +224,66 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
                         />
                     </div>
 
-                    <div className={styles.formGroup}>
-                        <label htmlFor="maxBonus" className={styles.label}>Max Bonus</label>
-                        <input
-                            type="number"
-                            onChange={(e) => setMaxBonus(Number(e.target.value))}
-                            id='maxBonus'
-                            step="0.1"
-                            min="0"
-                            value={maxBonus}
-                            className={styles.input}
-                        />
-                    </div>
+                    {/*<div className={styles.formGroup}>*/}
+                    {/*    <label htmlFor="maxBonus" className={styles.label}>Max Bonus</label>*/}
+                    {/*    <input*/}
+                    {/*        type="number"*/}
+                    {/*        onChange={(e) => setMaxBonus(Number(e.target.value))}*/}
+                    {/*        id='maxBonus'*/}
+                    {/*        step="0.1"*/}
+                    {/*        min="0"*/}
+                    {/*        value={maxBonus}*/}
+                    {/*        className={styles.input}*/}
+                    {/*    />*/}
+                    {/*</div>*/}
 
-                    <div className={styles.formGroup}>
-                        <label htmlFor="bonusFactor" className={styles.label}>Bonus Factor</label>
-                        <input
-                            type="number"
-                            onChange={(e) => setBonusFactor(Number(e.target.value))}
-                            id='bonusFactor'
-                            step="0.01"
-                            min="0"
-                            max="1"
-                            value={bonusFactor}
-                            className={styles.input}
-                        />
-                    </div>
+                    {/*<div className={styles.formGroup}>*/}
+                    {/*    <label htmlFor="bonusFactor" className={styles.label}>Bonus Factor</label>*/}
+                    {/*    <input*/}
+                    {/*        type="number"*/}
+                    {/*        onChange={(e) => setBonusFactor(Number(e.target.value))}*/}
+                    {/*        id='bonusFactor'*/}
+                    {/*        step="0.01"*/}
+                    {/*        min="0"*/}
+                    {/*        max="1"*/}
+                    {/*        value={bonusFactor}*/}
+                    {/*        className={styles.input}*/}
+                    {/*    />*/}
+                    {/*</div>*/}
 
+                    {/*<div className={styles.formGroup}>*/}
+                    {/*    <label htmlFor="bonusScale" className={styles.label}>Bonus Scale</label>*/}
+                    {/*    <input*/}
+                    {/*        type="number"*/}
+                    {/*        onChange={(e) => setBonusScale(Number(e.target.value))}*/}
+                    {/*        id='bonusScale'*/}
+                    {/*        step="0.1"*/}
+                    {/*        min="0"*/}
+                    {/*        max="1"*/}
+                    {/*        value={bonusScale}*/}
+                    {/*        className={styles.input}*/}
+                    {/*    />*/}
+                    {/*</div>*/}
                     <div className={styles.formGroup}>
-                        <label htmlFor="bonusScale" className={styles.label}>Bonus Scale</label>
-                        <input
-                            type="number"
-                            onChange={(e) => setBonusScale(Number(e.target.value))}
-                            id='bonusScale'
-                            step="0.1"
-                            min="0"
-                            max="1"
-                            value={bonusScale}
-                            className={styles.input}
-                        />
+                        <label htmlFor="distributionConfig" className={styles.label}>
+                            Distribution Config
+                        </label>
+                        <select
+                            id="distributionConfig"
+                            value={activeConfigId ?? ""}
+                            onChange={(e) => setActiveConfigId(Number(e.target.value) || null)}
+                            className={styles.select}
+                            required
+                        >
+                            <option value="" disabled>
+                                Виберіть конфігурацію
+                            </option>
+                            {distribConfigs.map((config) => (
+                                <option key={config.id} value={config.id}>
+                                    {config.func_name || `Config ${config.id}`}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
                 <strong style={{textAlign: 'center', color: 'red'}}>Спочатку "зберегти статичні параметри", після - "зберегти конфігурацію"</strong>

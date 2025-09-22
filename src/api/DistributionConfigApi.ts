@@ -14,3 +14,8 @@ export async function fetchDistributionConfigs(){
     const {data} = await api.get<DistributionConfig[]>("/distribution-configs/");
     return data;
 }
+
+export async function fetchDistributionConfig(id: number){
+    const {data} = await api.get<DistributionConfig>(`/distribution-configs/${id}/`);
+    return data;
+}

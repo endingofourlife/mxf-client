@@ -84,7 +84,7 @@ function ShowCalculationProcessTable({activeConfig, activeObject, pricingConfig}
     });
 
     // step 16
-    const fitCondValues = calculateFitCondValues(spMixedRtNorm, fitSpreadRate);
+    const fitCondValues = calculateFitCondValues(spMixedRtNorm, minLiqRate, maxLiqRate, currentPricePerSQM);
 
     // TODO: change hardcoded value
     const engine = "Regular";
@@ -99,10 +99,10 @@ function ShowCalculationProcessTable({activeConfig, activeObject, pricingConfig}
                 <pre>{JSON.stringify(activeConfig, null, 2)}</pre>
             </h2>
 
-            <h2>
-                Вибраний прайсінг конфіг
-                <pre>{JSON.stringify(pricingConfig, null, 2)}</pre>
-            </h2>
+            {/*<h2>*/}
+            {/*    Вибраний прайсінг конфіг*/}
+            {/*    <pre>{JSON.stringify(pricingConfig, null, 2)}</pre>*/}
+            {/*</h2>*/}
 
             <h3>Розрахункові параметри:</h3>
             <ul>
