@@ -79,8 +79,8 @@ export function calculateFitCondValues(
     }
 
     // Обчислення b-fit_transform і t-fit_transform
-    const b_fit_transform = b_rate_net / spMixedRtNorm_scope_b;
-    const t_fit_transform = t_rate_net / spMixedRtNorm_scope_t;
+    const b_fit_transform =  spMixedRtNorm_scope_b / b_rate_net ;
+    const t_fit_transform =  spMixedRtNorm_scope_t / t_rate_net ;
     console.debug(`b_fit_transform=${b_fit_transform}, t_fit_transform=${t_fit_transform}`);
 
     // Обчислення fit_cond_value
