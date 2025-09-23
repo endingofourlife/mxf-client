@@ -95,7 +95,6 @@ function UploadSpecificationFile({
                         return row['Premises ID'] != null || row['Property type'] != null;
                     });
 
-                console.log('Parsed data:', parsed); // For debugging
                 setPreviewSpecData(parsed);
                 setIsPreview(true);
             } catch (error) {

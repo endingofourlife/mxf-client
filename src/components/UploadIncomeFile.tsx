@@ -88,7 +88,6 @@ function UploadIncomeFile({
                         return row['Property type'] != null || row['period_begin'] != null;
                     });
 
-                console.log('Parsed data:', parsed); // For debugging
                 setPreviewIncomeData(parsed);
                 setIsPreview(true);
             } catch (error) {

@@ -35,7 +35,6 @@ function EnginePage() {
         async function fetchData() {
             try {
                 const response = await fetchRealEstateObject(Number(id));
-                console.log(response);
                 setActiveObject(response);
             } catch (error) {
                 console.error("Error fetching real estate object:", error);

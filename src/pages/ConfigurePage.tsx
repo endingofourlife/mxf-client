@@ -76,7 +76,6 @@ function ConfigurePage() {
                 setIsLoading(false);
                 return;
             }
-            console.log("Active object already set. Fetching pricing config only.");
             getPricingConfig();
             getDistributionConfigs();
             return;
@@ -127,7 +126,6 @@ function ConfigurePage() {
 
             const response = await createPricingConfig(Number(id), configToSave);
             setPricingConfig(response[response.length - 1]);
-            console.log("Saved pricing config:", response);
             alert("Конфігурацію успішно збережено!");
         } catch (error) {
             console.error("Error saving pricing config:", error);

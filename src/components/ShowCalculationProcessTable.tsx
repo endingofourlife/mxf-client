@@ -65,13 +65,15 @@ function ShowCalculationProcessTable({activeConfig, activeObject, pricingConfig}
 
     // step 11
     const fitSpreadRate = calculateFitSpreadRate(spMixedRtNormScope, spread);
-    console.log(fitSpreadRate);
 
     // step 12
-    const { conditionalCosts, totalCondCost, premCondCostShr } = calculateConditionalCosts(flatsWithScores, spMixedRtNorm, fitSpreadRate);
+    const currentPricePerSQM = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig.current_price_per_sqm;
 
     // step 13
-    const currentPricePerSQM = activeObject.pricing_configs[activeObject.pricing_configs.length-1].content.staticConfig.current_price_per_sqm;
+    const fitCondValues = calculateFitCondValues(spMixedRtNorm, minLiqRate, maxLiqRate, currentPricePerSQM);
+
+    // step 12
+    const { conditionalCosts, totalCondCost, premCondCostShr } = calculateConditionalCosts(flatsWithScores, fitCondValues); // Changed here. Was a single value
 
     // step 14
     const actualCosts = calculateActualCosts(flatsWithScores, currentPricePerSQM, premCondCostShr);
@@ -82,9 +84,6 @@ function ShowCalculationProcessTable({activeConfig, activeObject, pricingConfig}
         const result = (cost.actualCost * premCondCostShr[i]) / area;
         return area === 0 ? "N/A" : result;
     });
-
-    // step 16
-    const fitCondValues = calculateFitCondValues(spMixedRtNorm, minLiqRate, maxLiqRate, currentPricePerSQM);
 
     // TODO: change hardcoded value
     const engine = "Regular";

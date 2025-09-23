@@ -22,7 +22,6 @@ export function calculateOnboardingPrice(
 
     // Calculate soldout based on oversold_method
     const soldout = calculateSoldout(specData, config);
-    console.log('Calculated soldout:', soldout);
 
     if (!incomePlans || incomePlans.length === 0) {
         return parseFloat(unitData.current_price_per_sqm || '0');

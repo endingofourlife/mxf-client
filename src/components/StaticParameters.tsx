@@ -54,12 +54,6 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
     // TODO FIX CALCULATIONS
     useEffect(() => {
         if (premises && incomePlans.length > 0) {
-            console.log('Recalculating price with:', {
-                premisesCount: premises.length,
-                incomePlansCount: incomePlans.length,
-                oversold_method,
-            });
-
             const newPrice = calculateOnboardingPrice(
                 { current_price_per_sqm: current_price_per_sqm.toString() },
                 premises,
@@ -67,10 +61,9 @@ function StaticParameters({ currentConfig, setStaticConfig, incomePlans, premise
                 incomePlans
             );
 
-            console.log('New calculated price:', newPrice);
             setCurrentPricePerSqm(newPrice);
         } else {
-            console.log('Cannot calculate - missing data:', {
+            console.error('Cannot calculate - missing data:', {
                 hasPremises: !!premises,
                 hasIncomePlans: incomePlans.length > 0,
             });

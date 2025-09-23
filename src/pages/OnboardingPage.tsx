@@ -65,7 +65,6 @@ function OnboardingPage() {
             const response = await updatePremisesBulk(transformedData);
             const newActiveObject = {...activeObject, premises: response};
             setActiveObject(newActiveObject);
-            console.log('Successfully saved specification data:', response);
         } catch (error) {
             console.error('Error saving specification data:', error);
             alert('Не вдалося зберегти дані специфікації.');
@@ -83,7 +82,6 @@ function OnboardingPage() {
             const response = await updateIncomePlanBulk(transformedData);
             const newActiveObject = {...activeObject, income_plans: response};
             setActiveObject(newActiveObject);
-            console.log('Saving income plan data:', response);
         } catch (error) {
             console.error('Error saving income plan data:', error);
             alert('Не вдалося зберегти дані плану доходів.');
