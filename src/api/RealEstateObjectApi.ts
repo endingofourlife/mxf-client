@@ -1,5 +1,5 @@
 import type {RealEstateObject} from "../interfaces/RealEstateObject.ts";
-import {api} from "./BaseApi.ts";
+import api from "./BaseApi.ts";
 
 export async function fetchRealEstateObject(id: number) : Promise<RealEstateObject> {
     const {data} = await api.get<RealEstateObject>(`/real-estate-objects/${id}`);

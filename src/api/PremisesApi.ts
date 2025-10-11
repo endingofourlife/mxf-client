@@ -1,5 +1,5 @@
 import type { Premises } from "../interfaces/Premises.ts";
-import {api} from "./BaseApi.ts";
+import api from "./BaseApi.ts";
 
 export interface PremisesCreateRequest {
     reo_id: number;

@@ -1,4 +1,4 @@
-import {api} from "./BaseApi.ts";
+import api from "./BaseApi.ts";
 import type {DistributionConfig} from "../interfaces/DistributionConfig.ts";
 
 

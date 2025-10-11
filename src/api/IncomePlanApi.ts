@@ -1,4 +1,4 @@
-import {api} from "./BaseApi.ts";
+import api from "./BaseApi.ts";
 import type {IncomePlan} from "../interfaces/IncomePlan.ts";
 
 export interface IncomePlanCreateRequest {

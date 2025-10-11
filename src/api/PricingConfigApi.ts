@@ -1,4 +1,4 @@
-import {api} from "./BaseApi.ts";
+import api from "./BaseApi.ts";
 import type {PricingConfig} from "../interfaces/PricingConfig.ts";
 
 export async function fetchPricingConfig(objId: number){
