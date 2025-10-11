@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { debounce } from 'lodash'; // Предполагаем, что lodash установлен; если нет, можно реализовать debounce вручную
+import { debounce } from 'lodash';
 import api from "../api/BaseApi.ts";
 
 interface User {
@@ -14,7 +14,6 @@ interface User {
 interface RealEstateObject {
     id: string;
     title?: string;
-    // Add other fields as needed
 }
 
 interface PermissionRequest {
@@ -35,7 +34,6 @@ function AdminPage() {
     const [searchLoading, setSearchLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Загружаем всех пользователей один раз при монтировании
     useEffect(() => {
         async function fetchAllUsers() {
             try {
@@ -53,7 +51,6 @@ function AdminPage() {
         fetchAllUsers();
     }, []);
 
-    // Оптимизированная фильтрация с useMemo (реагирует только на изменения searchQuery)
     const filteredUsersMemo = useMemo(() => {
         if (!searchQuery.trim()) {
             return []; // Изначально ничего не показываем
@@ -65,12 +62,10 @@ function AdminPage() {
         );
     }, [allUsers, searchQuery]);
 
-    // Debounced обновление filteredUsers (для производительности, если allUsers большой)
     useEffect(() => {
         setFilteredUsers(filteredUsersMemo);
     }, [filteredUsersMemo]);
 
-    // Debounced обработчик поиска (избегает фильтрации на каждый keystroke)
     const debouncedSearch = useCallback(
         debounce((query: string) => {
             setSearchQuery(query);
@@ -83,12 +78,11 @@ function AdminPage() {
         debouncedSearch(query);
     };
 
-    // Остальной код для модалки и объектов остается без изменений
     const fetchRealEstateObjects = async (userId: string) => {
         try {
             setLoading(true);
             setError(null);
-            const { data } = await api.get<RealEstateObject[]>(`/real-estate/user/${userId}`);
+            const { data } = await api.get<RealEstateObject[]>(`URL_TO_FETCH`);
             setRealEstateObjects(data);
             setSelectedObjects(new Set());
         } catch (error) {
